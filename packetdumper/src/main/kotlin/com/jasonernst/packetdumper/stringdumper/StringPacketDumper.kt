@@ -69,30 +69,32 @@ class StringPacketDumper(private val packetLogger: Logger? = null, private val w
     ): String {
         val startingPosition = buffer.position()
         // optionally prepend the ethernet dummy header
-        val conversionBuffer =
-            if (etherType != null) {
-                prependDummyHeader(buffer, offset, length, etherType)
-            } else {
-                val totalLength = minOf(length, buffer.limit() - offset)
-                if (totalLength < length) {
-                    logger.warn("Trying to dump more bytes than are in the buffer. Dumping up to buffer limit.")
-                }
-                val newBuffer = ByteBuffer.allocate(totalLength)
-                newBuffer.put(buffer.array(), offset, totalLength)
-                newBuffer.rewind()
-                newBuffer
+        val conversionBuffer = if (etherType != null) {
+            prependDummyHeader(buffer, offset, length, etherType)
+        } else {
+            buffer
+        }
+
+        var totalLength = 0
+        if (etherType == null) {
+            buffer.position(offset)
+            totalLength = minOf(length, buffer.remaining())
+            if (totalLength < length) {
+                logger.warn("Trying to dump more bytes than are in the buffer. Dumping up to buffer limit.")
             }
+        }
+
         val output = StringBuilder()
         var i = 0
-        while (i < conversionBuffer.limit()) {
-            if (addresses && (i % 16 == offset % 16)) {
-                output.append(String.format("%08X  ", i - (offset % 16) - (16 * (offset / 16))))
+        while (buffer.hasRemaining()) {
+            if (addresses && (i % 16 == 0)) {
+                output.append(String.format("%08X  ", i))
             }
             output.append(String.format("%02X", buffer.get()))
             i++
-            if (i > offset && i % 16 == offset % 16) {
+            if (i % 16 == 0) {
                 output.append("\n")
-            } else if (i < (length + offset)) {
+            } else if (buffer.hasRemaining()) {
                 output.append(" ")
             }
         }
