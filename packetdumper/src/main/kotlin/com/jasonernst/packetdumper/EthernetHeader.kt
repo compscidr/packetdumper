@@ -2,7 +2,6 @@ package com.jasonernst.packetdumper
 
 import org.slf4j.LoggerFactory
 import java.nio.ByteBuffer
-import java.security.InvalidParameterException
 
 /**
  * Bare minimal Ethernet frame.
@@ -28,7 +27,7 @@ class EthernetHeader(private var destination: MACAddress, private var source: MA
             buffer: ByteBuffer,
             offset: Int = 0,
             length: Int = 0,
-            etherType: EtherType
+            etherType: EtherType,
         ): ByteBuffer {
             val startingPosition = buffer.position()
             val totalLength = minOf(length, buffer.limit() - offset)
@@ -36,13 +35,14 @@ class EthernetHeader(private var destination: MACAddress, private var source: MA
                 logger.warn("Trying to dump more bytes than are in the buffer. Dumping up to buffer limit.")
             }
             val newBuffer = ByteBuffer.allocate(totalLength + ETHERNET_HEADER_LENGTH.toInt())
-            val detectedEtherType = if (etherType == EtherType.DETECT) {
-                val ipVersion = buffer.get(offset).toUByte()
-                buffer.position(startingPosition)
-                getEtherTypeFromIPVersionByte(ipVersion)
-            } else {
-                etherType
-            }
+            val detectedEtherType =
+                if (etherType == EtherType.DETECT) {
+                    val ipVersion = buffer.get(offset).toUByte()
+                    buffer.position(startingPosition)
+                    getEtherTypeFromIPVersionByte(ipVersion)
+                } else {
+                    etherType
+                }
             newBuffer.put(dummyEthernet(detectedEtherType).toBytes())
             newBuffer.put(buffer.array(), offset, totalLength)
             newBuffer.rewind()

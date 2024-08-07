@@ -2,8 +2,6 @@ package com.jasonernst.packetdumper.stringdumper
 
 import com.jasonernst.packetdumper.AbstractPacketDumper
 import com.jasonernst.packetdumper.EtherType
-import com.jasonernst.packetdumper.EthernetHeader
-import com.jasonernst.packetdumper.EthernetHeader.Companion
 import com.jasonernst.packetdumper.EthernetHeader.Companion.prependDummyHeader
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -71,18 +69,19 @@ class StringPacketDumper(private val packetLogger: Logger? = null, private val w
     ): String {
         val startingPosition = buffer.position()
         // optionally prepend the ethernet dummy header
-        val conversionBuffer = if (etherType != null) {
-            prependDummyHeader(buffer, offset, length, etherType)
-        } else {
-            val totalLength = minOf(length, buffer.limit() - offset)
-            if (totalLength < length) {
-                logger.warn("Trying to dump more bytes than are in the buffer. Dumping up to buffer limit.")
+        val conversionBuffer =
+            if (etherType != null) {
+                prependDummyHeader(buffer, offset, length, etherType)
+            } else {
+                val totalLength = minOf(length, buffer.limit() - offset)
+                if (totalLength < length) {
+                    logger.warn("Trying to dump more bytes than are in the buffer. Dumping up to buffer limit.")
+                }
+                val newBuffer = ByteBuffer.allocate(totalLength)
+                newBuffer.put(buffer.array(), offset, totalLength)
+                newBuffer.rewind()
+                newBuffer
             }
-            val newBuffer = ByteBuffer.allocate(totalLength)
-            newBuffer.put(buffer.array(), offset, totalLength)
-            newBuffer.rewind()
-            newBuffer
-        }
         val output = StringBuilder()
         var i = 0
         while (i < conversionBuffer.limit()) {
