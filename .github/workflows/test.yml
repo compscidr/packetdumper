@@ -33,10 +33,6 @@ jobs:
       - name: JVM unit Tests with Coverage Report
         run: ./gradlew check
 
-      - name: cleanup adb
-        if: always()
-        run: adb kill-server
-
       - name: Upload Lib Unit Tests Report to CodeCov
         # https://github.com/codecov/codecov-action
         uses: codecov/codecov-action@v4
