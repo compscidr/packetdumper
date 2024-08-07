@@ -1,0 +1,21 @@
+[versions]
+jupiter = "5.10.3"
+kotlin = "2.0.10"
+kotlinter = "4.3.0"
+logback-classic = "1.5.6"
+mockk = "1.13.12"
+slf4j = "2.0.14"
+
+[libraries]
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "jupiter" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "jupiter" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback-classic" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+
+[bundles]
+test = ["junit-jupiter-api", "mockk"]
+
+[plugins]
+jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
