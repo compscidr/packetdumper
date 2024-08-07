@@ -1,0 +1,46 @@
+name: Test and Reports
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [ opened, synchronize ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: dev
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          clean: true
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+      - name: Build with Gradle
+        run: ./gradlew clean build --no-build-cache
+      - name: lint
+        run: ./gradlew app:lint
+      - name: lint results
+        uses: yutailang0119/action-android-lint@v4.0.0
+        with:
+          report-path: app/build/reports/lint/report.xml
+      - name: JVM unit Tests with Coverage Report
+        run: ./gradlew check
+
+      - name: cleanup adb
+        if: always()
+        run: adb kill-server
+
+      - name: Upload Lib Unit Tests Report to CodeCov
+        # https://github.com/codecov/codecov-action
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: libunittests
+          files: ./packetdumper/build/reports/jacoco/test/jacocoTestReport.xml
