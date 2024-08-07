@@ -24,15 +24,8 @@ jobs:
           distribution: temurin
       - name: Build with Gradle
         run: ./gradlew clean build --no-build-cache
-      - name: lint
-        run: ./gradlew app:lint
-      - name: lint results
-        uses: yutailang0119/action-android-lint@v4.0.0
-        with:
-          report-path: app/build/reports/lint/report.xml
       - name: JVM unit Tests with Coverage Report
         run: ./gradlew check
-
       - name: Upload Lib Unit Tests Report to CodeCov
         # https://github.com/codecov/codecov-action
         uses: codecov/codecov-action@v4
