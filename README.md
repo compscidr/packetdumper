@@ -71,6 +71,6 @@ println(hexString)
 ```
 
 ## TODO
-- [ ] Release on Maven Central
 - [ ] Support options for pcap blocks
 - [ ] Timestamps on enhanced packet blocks
+- [ ] fix codecov reports
