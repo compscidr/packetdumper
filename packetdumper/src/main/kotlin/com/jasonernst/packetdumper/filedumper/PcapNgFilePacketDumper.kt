@@ -2,6 +2,7 @@ package com.jasonernst.packetdumper.filedumper
 
 import com.jasonernst.packetdumper.ethernet.EtherType
 import com.jasonernst.packetdumper.ethernet.EthernetHeader.Companion.prependDummyHeader
+import com.jasonernst.packetdumper.pcapng.PcapNgEnhancedPacketBlock
 import com.jasonernst.packetdumper.pcapng.PcapNgInterfaceDescriptionBlock
 import com.jasonernst.packetdumper.pcapng.PcapNgSectionHeaderBlockLive
 import com.jasonernst.packetdumper.pcapng.PcapNgSimplePacketBlock
@@ -61,7 +62,10 @@ class PcapNgFilePacketDumper(
             outputStreamWriter.write(packetBlock.toBytes())
             outputStreamWriter.flush()
         } else {
-            TODO()
+            // todo: timestamp
+            val packetBlock = PcapNgEnhancedPacketBlock(conversionBuffer.array())
+            outputStreamWriter.write(packetBlock.toBytes())
+            outputStreamWriter.flush()
         }
     }
 }
