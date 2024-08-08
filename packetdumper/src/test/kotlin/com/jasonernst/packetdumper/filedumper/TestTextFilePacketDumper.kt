@@ -67,7 +67,8 @@ class TestTextFilePacketDumper {
     }
 
     @Disabled("This is broken atm")
-    @Test fun testDumpBuffer() {
+    @Test
+    fun testDumpBuffer() {
         dumper.open()
         val stringDumper = StringPacketDumper()
         val buffer = ByteBuffer.wrap("Hello, World!".toByteArray())
