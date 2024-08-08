@@ -3,6 +3,7 @@ package com.jasonernst.packetdumper.filedumper
 import com.jasonernst.packetdumper.ethernet.EtherType
 import com.jasonernst.packetdumper.stringdumper.StringPacketDumper
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.nio.ByteBuffer
 
 /**
@@ -47,5 +48,49 @@ class TextFilePacketDumper(
         }
         val output = stringDumper.dumpBufferToString(buffer, offset, length, addresses, etherType)
         file.writeText(output)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(this::class.java)
+
+        /**
+         * Attempts to parse a text file into a ByteBuffer
+         */
+        fun parseFile(
+            filename: String,
+            addresses: Boolean = false,
+            etherType: EtherType?,
+        ): ByteBuffer {
+            val stringDumper = StringPacketDumper()
+            val file = File(filename)
+            var text = file.readText()
+            logger.debug("raw text: $text")
+
+            if (addresses) {
+                val lines = text.split("\n")
+                text = ""
+                for (line in lines) {
+                    text += line.drop(10) + " "
+                }
+                text = text.trimEnd() // remove the trailing space
+                logger.debug("No address text: $text")
+            }
+
+            if (etherType != null) {
+                // note: we multiple by 3, because each byte is represented by two hex characters and a
+                // space character
+                text = text.drop(42)
+                logger.debug("No ether type text: $text")
+            }
+
+            // remove any remaining newlines
+            text = text.replace("\n", " ")
+
+            // each space separated value is a hex value, so we need to turn it back into bytes
+            val readBuffer = ByteBuffer.wrap(text.split(" ").map { it.toInt(16).toByte() }.toByteArray())
+
+            logger.debug("read buffer: ${stringDumper.dumpBufferToString(readBuffer, 0, readBuffer.limit())}")
+            return readBuffer
+        }
     }
 }

@@ -32,37 +32,7 @@ class TestTextFilePacketDumper {
         logger.debug("write buffer: ${stringDumper.dumpBufferToString(buffer, 0, buffer.limit())}")
         dumper.dumpBuffer(buffer, 0, buffer.limit(), addresses, etherType)
         dumper.close()
-
-        // re-open the file
-        val file = File(dumper.filename)
-        var text = file.readText()
-        logger.debug("raw text: $text")
-
-        if (addresses) {
-            val lines = text.split("\n")
-            text = ""
-            for (line in lines) {
-                text += line.drop(10) + " "
-            }
-            text = text.trimEnd() // remove the trailing space
-            logger.debug("No address text: $text")
-        }
-
-        if (etherType != null) {
-            // note: we multiple by 3, because each byte is represented by two hex characters and a
-            // space character
-            text = text.drop(42)
-            logger.debug("No ether type text: $text")
-        }
-
-        // remove any remaining newlines
-        text = text.replace("\n", " ")
-
-        // each space separated value is a hex value, so we need to turn it back into bytes
-        val readBuffer = ByteBuffer.wrap(text.split(" ").map { it.toInt(16).toByte() }.toByteArray())
-
-        logger.debug("read buffer: ${stringDumper.dumpBufferToString(readBuffer, 0, readBuffer.limit())}")
-        return readBuffer
+        return TextFilePacketDumper.parseFile(dumper.filename, addresses, etherType)
     }
 
     @AfterEach fun tearDown() {
