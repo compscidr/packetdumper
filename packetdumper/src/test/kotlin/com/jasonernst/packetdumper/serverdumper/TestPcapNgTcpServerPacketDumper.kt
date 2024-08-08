@@ -3,16 +3,21 @@ package com.jasonernst.packetdumper.serverdumper
 import com.jasonernst.packetdumper.PcapNgTestHelper.verifyHeaders
 import com.jasonernst.packetdumper.ethernet.EtherType
 import com.jasonernst.packetdumper.ethernet.EthernetHeader
+import com.jasonernst.packetdumper.ethernet.EthernetHeader.Companion.dummyEthernet
 import com.jasonernst.packetdumper.pcapng.PcapNgEnhancedPacketBlock
+import com.jasonernst.packetdumper.pcapng.PcapNgInterfaceDescriptionBlock
+import com.jasonernst.packetdumper.pcapng.PcapNgSectionHeaderBlockLive
 import com.jasonernst.packetdumper.pcapng.PcapNgSimplePacketBlock
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.nio.ByteBuffer
 
+@Timeout(10)
 class TestPcapNgTcpServerPacketDumper {
     private val logger = LoggerFactory.getLogger(javaClass)
     private lateinit var dumper: PcapNgTcpServerPacketDumper
@@ -45,13 +50,13 @@ class TestPcapNgTcpServerPacketDumper {
         dumper.stop()
     }
 
-    private fun waitForData(): ByteBuffer {
-        logger.debug("Waiting to receive data from the tcp dumper")
+    private fun waitForData(expectedBytes: Int): ByteBuffer {
+        logger.debug("Waiting to receive $expectedBytes bytes from the tcp dumper")
         var available = 0
         do {
             available = tcpClientSocket?.getInputStream()?.available() ?: 0
             Thread.sleep(100)
-        } while (available == 0)
+        } while (available < expectedBytes)
         logger.debug("Available bytes: $available")
 
         val recvBuffer = ByteArray(available)
@@ -75,7 +80,8 @@ class TestPcapNgTcpServerPacketDumper {
         dumper.start()
         connectToServer(InetSocketAddress("localhost", PcapNgTcpServerPacketDumper.DEFAULT_PORT))
 
-        val readBuffer = waitForData()
+        val expectedSize = PcapNgSectionHeaderBlockLive.size() + PcapNgInterfaceDescriptionBlock().size()
+        val readBuffer = waitForData(expectedSize.toInt())
         verifyHeaders(readBuffer)
 
         dumper.stop()
@@ -87,13 +93,14 @@ class TestPcapNgTcpServerPacketDumper {
         dumper.start()
         connectToServer(InetSocketAddress("localhost", PcapNgTcpServerPacketDumper.DEFAULT_PORT))
 
-        var readBuffer = waitForData()
+        var expectedSize = PcapNgSectionHeaderBlockLive.size() + PcapNgInterfaceDescriptionBlock().size()
+        var readBuffer = waitForData(expectedSize.toInt())
         verifyHeaders(readBuffer)
 
         val buffer = ByteBuffer.wrap(byteArrayOf(0x01, 0x02, 0x03, 0x04))
         dumper.dumpBuffer(buffer, 0, buffer.limit(), false, null)
-
-        readBuffer = waitForData()
+        expectedSize = PcapNgSimplePacketBlock(buffer.array()).size()
+        readBuffer = waitForData(expectedSize.toInt())
 
         val simplePacketBlock = PcapNgSimplePacketBlock.fromStream(readBuffer)
         assertEquals(buffer, ByteBuffer.wrap(simplePacketBlock.packetData))
@@ -105,13 +112,14 @@ class TestPcapNgTcpServerPacketDumper {
         dumper.start()
         connectToServer(InetSocketAddress("localhost", PcapNgTcpServerPacketDumper.DEFAULT_PORT))
 
-        var readBuffer = waitForData()
+        var expectedSize = PcapNgSectionHeaderBlockLive.size() + PcapNgInterfaceDescriptionBlock().size()
+        var readBuffer = waitForData(expectedSize.toInt())
         verifyHeaders(readBuffer)
 
         val buffer = ByteBuffer.wrap(byteArrayOf(0x01, 0x02, 0x03, 0x04))
         dumper.dumpBuffer(buffer, 0, buffer.limit(), false, EtherType.IPv4)
-
-        readBuffer = waitForData()
+        expectedSize = PcapNgSimplePacketBlock(buffer.array() + dummyEthernet(EtherType.IPv4).toBytes()).size()
+        readBuffer = waitForData(expectedSize.toInt())
 
         val simplePacketBlock = PcapNgSimplePacketBlock.fromStream(readBuffer)
 
@@ -133,25 +141,33 @@ class TestPcapNgTcpServerPacketDumper {
         dumper.start()
         connectToServer(InetSocketAddress("localhost", PcapNgTcpServerPacketDumper.DEFAULT_PORT))
 
-        var readBuffer = waitForData()
+        var expectedSize = PcapNgSectionHeaderBlockLive.size() + PcapNgInterfaceDescriptionBlock().size()
+        var readBuffer = waitForData(expectedSize.toInt())
         verifyHeaders(readBuffer)
 
         val buffer = ByteBuffer.wrap(byteArrayOf(0x01, 0x02, 0x03, 0x04))
         val buffer2 = ByteBuffer.wrap(byteArrayOf(0x05, 0x06, 0x07, 0x08))
         dumper.dumpBuffer(buffer, 0, buffer.limit(), false, null)
         dumper.dumpBuffer(buffer2, 0, buffer2.limit(), false, null)
+        expectedSize = PcapNgSimplePacketBlock(buffer.array()).size()
 
-        readBuffer = waitForData()
+        readBuffer = waitForData(expectedSize.toInt())
 
         val simplePacketBlock = PcapNgSimplePacketBlock.fromStream(readBuffer)
         assertEquals(buffer, ByteBuffer.wrap(simplePacketBlock.packetData))
 
-        if (readBuffer.hasRemaining()) {
+        if (readBuffer.remaining() == expectedSize.toInt()) {
             val simplePacketBlock2 = PcapNgSimplePacketBlock.fromStream(readBuffer)
             assertEquals(buffer2, ByteBuffer.wrap(simplePacketBlock2.packetData))
         } else {
-            readBuffer = waitForData()
-            val simplePacketBlock2 = PcapNgSimplePacketBlock.fromStream(readBuffer)
+            val difference = expectedSize.toInt() - readBuffer.remaining()
+            val remainingBuffer = waitForData(difference)
+            // merge the two
+            val mergedBuffer = ByteBuffer.allocate(expectedSize.toInt())
+            mergedBuffer.put(readBuffer)
+            mergedBuffer.put(remainingBuffer)
+            mergedBuffer.rewind()
+            val simplePacketBlock2 = PcapNgSimplePacketBlock.fromStream(mergedBuffer)
             assertEquals(buffer2, ByteBuffer.wrap(simplePacketBlock2.packetData))
         }
     }
@@ -162,13 +178,14 @@ class TestPcapNgTcpServerPacketDumper {
         dumper.start()
         connectToServer(InetSocketAddress("localhost", PcapNgTcpServerPacketDumper.DEFAULT_PORT))
 
-        var readBuffer = waitForData()
+        var expectedSize = PcapNgSectionHeaderBlockLive.size() + PcapNgInterfaceDescriptionBlock().size()
+        var readBuffer = waitForData(expectedSize.toInt())
         verifyHeaders(readBuffer)
 
         val buffer = ByteBuffer.wrap(byteArrayOf(0x01, 0x02, 0x03, 0x04))
         dumper.dumpBuffer(buffer, 0, buffer.limit(), false, null)
-
-        readBuffer = waitForData()
+        expectedSize = PcapNgEnhancedPacketBlock(buffer.array()).size()
+        readBuffer = waitForData(expectedSize.toInt())
 
         val enhancedPacketBlock = PcapNgEnhancedPacketBlock.fromStream(readBuffer)
         assertEquals(buffer, ByteBuffer.wrap(enhancedPacketBlock.packetData))
@@ -180,13 +197,14 @@ class TestPcapNgTcpServerPacketDumper {
         dumper.start()
         connectToServer(InetSocketAddress("localhost", PcapNgTcpServerPacketDumper.DEFAULT_PORT))
 
-        var readBuffer = waitForData()
+        var expectedSize = PcapNgSectionHeaderBlockLive.size() + PcapNgInterfaceDescriptionBlock().size()
+        var readBuffer = waitForData(expectedSize.toInt())
         verifyHeaders(readBuffer)
 
         val buffer = ByteBuffer.wrap(byteArrayOf(0x01, 0x02, 0x03, 0x04))
         dumper.dumpBuffer(buffer, 0, buffer.limit(), false, EtherType.IPv4)
-
-        readBuffer = waitForData()
+        expectedSize = PcapNgEnhancedPacketBlock(buffer.array()).size()
+        readBuffer = waitForData(expectedSize.toInt())
 
         val enhancedPacketBlock = PcapNgEnhancedPacketBlock.fromStream(readBuffer)
 
@@ -208,25 +226,32 @@ class TestPcapNgTcpServerPacketDumper {
         dumper.start()
         connectToServer(InetSocketAddress("localhost", PcapNgTcpServerPacketDumper.DEFAULT_PORT))
 
-        var readBuffer = waitForData()
+        var expectedSize = PcapNgSectionHeaderBlockLive.size() + PcapNgInterfaceDescriptionBlock().size()
+        var readBuffer = waitForData(expectedSize.toInt())
         verifyHeaders(readBuffer)
 
         val buffer = ByteBuffer.wrap(byteArrayOf(0x01, 0x02, 0x03, 0x04))
         val buffer2 = ByteBuffer.wrap(byteArrayOf(0x05, 0x06, 0x07, 0x08))
         dumper.dumpBuffer(buffer, 0, buffer.limit(), false, null)
         dumper.dumpBuffer(buffer2, 0, buffer2.limit(), false, null)
-
-        readBuffer = waitForData()
+        expectedSize = PcapNgEnhancedPacketBlock(buffer.array()).size()
+        readBuffer = waitForData(expectedSize.toInt())
 
         val enhancedPacketBlock = PcapNgEnhancedPacketBlock.fromStream(readBuffer)
         assertEquals(buffer, ByteBuffer.wrap(enhancedPacketBlock.packetData))
 
-        if (readBuffer.hasRemaining()) {
+        if (readBuffer.remaining() == expectedSize.toInt()) {
             val enhancedPacketBlock2 = PcapNgEnhancedPacketBlock.fromStream(readBuffer)
             assertEquals(buffer2, ByteBuffer.wrap(enhancedPacketBlock2.packetData))
         } else {
-            readBuffer = waitForData()
-            val enhancedPacketBlock2 = PcapNgSimplePacketBlock.fromStream(readBuffer)
+            val difference = expectedSize.toInt() - readBuffer.remaining()
+            val remainingBuffer = waitForData(difference)
+            // merge the two
+            val mergedBuffer = ByteBuffer.allocate(expectedSize.toInt())
+            mergedBuffer.put(readBuffer)
+            mergedBuffer.put(remainingBuffer)
+            mergedBuffer.rewind()
+            val enhancedPacketBlock2 = PcapNgEnhancedPacketBlock.fromStream(mergedBuffer)
             assertEquals(buffer2, ByteBuffer.wrap(enhancedPacketBlock2.packetData))
         }
     }
