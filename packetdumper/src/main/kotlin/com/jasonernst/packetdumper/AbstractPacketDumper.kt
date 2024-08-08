@@ -2,11 +2,8 @@ package com.jasonernst.packetdumper
 
 import com.jasonernst.packetdumper.ethernet.EtherType
 import java.nio.ByteBuffer
-import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class AbstractPacketDumper {
-    protected var running = AtomicBoolean(false)
-
     /**
      * Dumps a ByteBuffer starting at position offset, and going until position length. If length
      * + offset is greater than buffer.remaining(), it will dump until the end of the buffer.
