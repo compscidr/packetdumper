@@ -69,11 +69,12 @@ class StringPacketDumper(private val packetLogger: Logger? = null, private val w
     ): String {
         val startingPosition = buffer.position()
         // optionally prepend the ethernet dummy header
-        val conversionBuffer = if (etherType != null) {
-            prependDummyHeader(buffer, offset, length, etherType)
-        } else {
-            buffer
-        }
+        val conversionBuffer =
+            if (etherType != null) {
+                prependDummyHeader(buffer, offset, length, etherType)
+            } else {
+                buffer
+            }
 
         var totalLength = 0
         if (etherType == null) {

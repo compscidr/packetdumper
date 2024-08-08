@@ -123,7 +123,7 @@ class TestStringPacketDumper {
         val hexString = stringPacketDumper.dumpBufferToString(buffer, 0, buffer.limit(), false)
         assertEquals(
             "00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n" +
-                    "10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F\n",
+                "10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F\n",
             hexString,
         )
 
@@ -274,7 +274,7 @@ class TestStringPacketDumper {
             )
         assertEquals(
             "02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10 11\n" +
-                    "12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F 20 21\n22",
+                "12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F 20 21\n22",
             hexString,
         )
     }
@@ -351,7 +351,7 @@ class TestStringPacketDumper {
         val hexString = stringPacketDumper.dumpBufferToString(buffer, 0, buffer.limit(), true)
         assertEquals(
             "00000000  00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n" +
-                    "00000010  10 11 12 13 14",
+                "00000010  10 11 12 13 14",
             hexString,
         )
 
@@ -403,7 +403,7 @@ class TestStringPacketDumper {
         val hexString = stringPacketDumper.dumpBufferToString(buffer, 0, buffer.limit(), true)
         assertEquals(
             "00000000  00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n" +
-                    "00000010  10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F\n00000020  20 21 22",
+                "00000010  10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F\n00000020  20 21 22",
             hexString,
         )
     }
@@ -498,7 +498,7 @@ class TestStringPacketDumper {
             )
         assertEquals(
             "00000000  01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10\n" +
-                    "00000010  11 12 13 14",
+                "00000010  11 12 13 14",
             hexString,
         )
 
@@ -556,7 +556,7 @@ class TestStringPacketDumper {
             )
         assertEquals(
             "00000000  01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10\n" +
-                    "00000010  11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F 20\n00000020  21 22",
+                "00000010  11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F 20\n00000020  21 22",
             hexString,
         )
     }
@@ -650,7 +650,7 @@ class TestStringPacketDumper {
                 ),
             )
 
-        val hexString =  stringPacketDumper.dumpBufferToString(buffer, 5, 14, true)
+        val hexString = stringPacketDumper.dumpBufferToString(buffer, 5, 14, true)
         assertEquals("00000000  05 06 07 08 09 0A 0B 0C 0D 0E 0F 10", hexString)
 
         // ensure that the buffer position is not changed
