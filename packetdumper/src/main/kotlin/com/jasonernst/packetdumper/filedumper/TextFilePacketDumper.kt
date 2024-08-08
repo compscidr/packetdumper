@@ -1,6 +1,6 @@
 package com.jasonernst.packetdumper.filedumper
 
-import com.jasonernst.packetdumper.EtherType
+import com.jasonernst.packetdumper.ethernet.EtherType
 import com.jasonernst.packetdumper.stringdumper.StringPacketDumper
 import org.slf4j.LoggerFactory
 import java.io.BufferedWriter

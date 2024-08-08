@@ -1,6 +1,6 @@
 package com.jasonernst.packetdumper.filedumper
 
-import com.jasonernst.packetdumper.EtherType
+import com.jasonernst.packetdumper.ethernet.EtherType
 import com.jasonernst.packetdumper.stringdumper.StringPacketDumper
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals

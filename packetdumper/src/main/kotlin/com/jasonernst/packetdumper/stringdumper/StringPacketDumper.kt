@@ -1,8 +1,8 @@
 package com.jasonernst.packetdumper.stringdumper
 
 import com.jasonernst.packetdumper.AbstractPacketDumper
-import com.jasonernst.packetdumper.EtherType
-import com.jasonernst.packetdumper.EthernetHeader.Companion.prependDummyHeader
+import com.jasonernst.packetdumper.ethernet.EtherType
+import com.jasonernst.packetdumper.ethernet.EthernetHeader.Companion.prependDummyHeader
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.ByteBuffer

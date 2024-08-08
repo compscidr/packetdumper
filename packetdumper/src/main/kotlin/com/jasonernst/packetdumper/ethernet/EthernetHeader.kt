@@ -1,4 +1,4 @@
-package com.jasonernst.packetdumper
+package com.jasonernst.packetdumper.ethernet
 
 import org.slf4j.LoggerFactory
 import java.nio.ByteBuffer
@@ -11,8 +11,8 @@ import java.nio.ByteBuffer
  * https://en.wikipedia.org/wiki/Ethernet_frame
  */
 class EthernetHeader(
-    private var destination: MACAddress,
-    private var source: MACAddress,
+    private var destination: MacAddress,
+    private var source: MacAddress,
     private var type: EtherType,
 ) {
     companion object {
@@ -54,8 +54,8 @@ class EthernetHeader(
         }
 
         fun fromStream(stream: ByteBuffer): EthernetHeader {
-            val destination = MACAddress.fromStream(stream)
-            val source = MACAddress.fromStream(stream)
+            val destination = MacAddress.fromStream(stream)
+            val source = MacAddress.fromStream(stream)
             val type = EtherType.fromValue(stream.short.toUShort())
             return EthernetHeader(destination, source, type)
         }
@@ -76,7 +76,7 @@ class EthernetHeader(
             }
 
         fun dummyEthernet(etherType: EtherType): EthernetHeader =
-            EthernetHeader(MACAddress.DUMMY_MAC_SOURCE, MACAddress.DUMMY_MAC_DEST, etherType)
+            EthernetHeader(MacAddress.DUMMY_MAC_SOURCE, MacAddress.DUMMY_MAC_DEST, etherType)
     }
 
     fun size() = ETHERNET_HEADER_LENGTH

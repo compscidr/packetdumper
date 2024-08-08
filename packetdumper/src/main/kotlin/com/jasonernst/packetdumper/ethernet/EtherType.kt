@@ -1,4 +1,4 @@
-package com.jasonernst.packetdumper
+package com.jasonernst.packetdumper.ethernet
 
 /**
  * https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml#ieee-802-numbers-1

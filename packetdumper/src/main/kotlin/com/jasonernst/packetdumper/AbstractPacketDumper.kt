@@ -1,5 +1,6 @@
 package com.jasonernst.packetdumper
 
+import com.jasonernst.packetdumper.ethernet.EtherType
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicBoolean
 

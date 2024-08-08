@@ -1,6 +1,6 @@
 package com.jasonernst.packetdumper.serverdumper
 
-import com.jasonernst.packetdumper.EtherType
+import com.jasonernst.packetdumper.ethernet.EtherType
 import java.nio.ByteBuffer
 
 class PcapNgTcpServerPacketDumper(
