@@ -22,7 +22,10 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Each block of offsets is separated by a blank newline, and represents a new packet / dump. When
  * the new dump starts, the offset can restart at 0.
  */
-class TextFilePacketDumper(private val path: String, private val name: String) : AbstractFilePacketDumper() {
+class TextFilePacketDumper(
+    private val path: String,
+    private val name: String,
+) : AbstractFilePacketDumper() {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val stringDumper = StringPacketDumper()
 

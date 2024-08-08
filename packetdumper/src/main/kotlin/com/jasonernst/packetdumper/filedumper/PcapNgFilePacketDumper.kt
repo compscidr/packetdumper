@@ -3,7 +3,9 @@ package com.jasonernst.packetdumper.filedumper
 import com.jasonernst.packetdumper.EtherType
 import java.nio.ByteBuffer
 
-class PcapNgFilePacketDumper(override var filename: String) : AbstractFilePacketDumper() {
+class PcapNgFilePacketDumper(
+    override var filename: String,
+) : AbstractFilePacketDumper() {
     override fun open() {
         TODO("Not yet implemented")
     }

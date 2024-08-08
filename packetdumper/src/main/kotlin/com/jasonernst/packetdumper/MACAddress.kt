@@ -23,9 +23,7 @@ class MACAddress {
         this.bytes = address.split(":").map { it.toInt(16).toByte() }.toByteArray()
     }
 
-    override fun toString(): String {
-        return bytes.joinToString(":") { it.toString(16).padStart(2, '0') }
-    }
+    override fun toString(): String = bytes.joinToString(":") { it.toString(16).padStart(2, '0') }
 
     companion object {
         fun fromStream(stream: ByteBuffer): MACAddress {
