@@ -9,6 +9,7 @@ implementation("com.jasonernst.packetdumper:packetdumper:<version>")
 
 ### pcapng tcp server
 This will start a TCP server on port 19000 that will accept connections from wireshark as follows:
+
 `wireshark -k -i TCP@<ip>:19000`
 
 ```kotlin
@@ -68,16 +69,6 @@ val buffer = ByteBuffer.wrap(byteArrayOf(0x01, 0x02, 0x03, 0x04))
 val hexString = dumper.dumpBufferToString(buffer, 0, buffer.limit(), true, EtherType.IPv4)
 println(hexString)
 ```
-
-## Currently supports:
-- [x] Basic buffer dumping capabilities to:
--   [x] hexdump stdout
--   [x] hexdump file (wireshark import compatible)
--   [x] hexdump string (for debugging)
--   [x] hexdump to slf4j logger
--   [x] pcapng file writing
--   [x] pcapng tcp server writing 
-- [x] Tests + CI integration
 
 ## TODO
 - [ ] Release on Maven Central
