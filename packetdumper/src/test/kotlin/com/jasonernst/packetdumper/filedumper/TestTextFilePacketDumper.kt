@@ -1,7 +1,6 @@
 package com.jasonernst.packetdumper.filedumper
 
 import com.jasonernst.packetdumper.EtherType
-import com.jasonernst.packetdumper.EthernetHeader
 import com.jasonernst.packetdumper.stringdumper.StringPacketDumper
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -52,9 +51,7 @@ class TestTextFilePacketDumper {
         if (etherType != null) {
             // note: we multiple by 3, because each byte is represented by two hex characters and a
             // space character
-            // EthernetHeader.ETHERNET_HEADER_LENGTH.toInt() * 3
             text = text.drop(42)
-            //text = text.trimEnd() // remove the trailing space
             logger.debug("No ether type text: $text")
         }
 
