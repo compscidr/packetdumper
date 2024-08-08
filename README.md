@@ -4,7 +4,7 @@
 A kotlin / android compatible buffer / packet dumper.
 
 ## Usage
-Add the dependency to your project (coming soon on maven central):
+Add the dependency to your project:
 ```
 implementation("com.jasonernst.packetdumper:packetdumper:<version>")
 ```
