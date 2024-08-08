@@ -4,7 +4,9 @@ package com.jasonernst.packetdumper
  * https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml#ieee-802-numbers-1
  * https://en.wikipedia.org/wiki/EtherType
  */
-enum class EtherType(val value: UShort) {
+enum class EtherType(
+    val value: UShort,
+) {
     BUMP(0x0101u),
     IPv4(0x0800u),
     ARP(0x0806u),

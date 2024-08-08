@@ -10,7 +10,11 @@ import java.nio.ByteBuffer
  *
  * https://en.wikipedia.org/wiki/Ethernet_frame
  */
-class EthernetHeader(private var destination: MACAddress, private var source: MACAddress, private var type: EtherType) {
+class EthernetHeader(
+    private var destination: MACAddress,
+    private var source: MACAddress,
+    private var type: EtherType,
+) {
     companion object {
         const val IP4_VERSION: UByte = 4u
         const val IP6_VERSION: UByte = 6u
@@ -61,8 +65,8 @@ class EthernetHeader(private var destination: MACAddress, private var source: MA
          * ethertype, it will just leave the type as 0xFFFF (detect) which maps to RESERVED in the
          * actual mapping.
          */
-        fun getEtherTypeFromIPVersionByte(ipVersion: UByte): EtherType {
-            return when (ipVersion) {
+        fun getEtherTypeFromIPVersionByte(ipVersion: UByte): EtherType =
+            when (ipVersion) {
                 IP4_VERSION -> EtherType.IPv4
                 IP6_VERSION -> EtherType.IPv6
                 else -> {
@@ -70,11 +74,9 @@ class EthernetHeader(private var destination: MACAddress, private var source: MA
                     EtherType.DETECT
                 }
             }
-        }
 
-        fun dummyEthernet(etherType: EtherType): EthernetHeader {
-            return EthernetHeader(MACAddress.DUMMY_MAC_SOURCE, MACAddress.DUMMY_MAC_DEST, etherType)
-        }
+        fun dummyEthernet(etherType: EtherType): EthernetHeader =
+            EthernetHeader(MACAddress.DUMMY_MAC_SOURCE, MACAddress.DUMMY_MAC_DEST, etherType)
     }
 
     fun size() = ETHERNET_HEADER_LENGTH
@@ -87,7 +89,5 @@ class EthernetHeader(private var destination: MACAddress, private var source: MA
         return buffer.array()
     }
 
-    override fun toString(): String {
-        return "EthernetHeader(destination=$destination, source=$source, type=$type, size=${size()})"
-    }
+    override fun toString(): String = "EthernetHeader(destination=$destination, source=$source, type=$type, size=${size()})"
 }

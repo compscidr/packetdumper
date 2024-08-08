@@ -14,7 +14,10 @@ import java.nio.ByteBuffer
  * @param packetLogger The slf4j logger to dump the buffers to.
  * @param writeToStdOut If true, will write to stdout (if the logger is null)
  */
-class StringPacketDumper(private val packetLogger: Logger? = null, private val writeToStdOut: Boolean = false) : AbstractPacketDumper() {
+class StringPacketDumper(
+    private val packetLogger: Logger? = null,
+    private val writeToStdOut: Boolean = false,
+) : AbstractPacketDumper() {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     /**
