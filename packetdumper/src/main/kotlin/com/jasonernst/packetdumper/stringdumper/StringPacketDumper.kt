@@ -102,7 +102,7 @@ class StringPacketDumper(
                 output.append(" ")
             }
         }
-        conversionBuffer.position(startingPosition)
+        buffer.position(startingPosition)
         return output.toString()
     }
 }

@@ -1,19 +1,46 @@
 package com.jasonernst.packetdumper.filedumper
 
 import com.jasonernst.packetdumper.ethernet.EtherType
+import com.jasonernst.packetdumper.ethernet.EthernetHeader.Companion.prependDummyHeader
+import com.jasonernst.packetdumper.pcapng.PcapNgInterfaceDescriptionBlock
+import com.jasonernst.packetdumper.pcapng.PcapNgSectionHeaderBlockLive
+import com.jasonernst.packetdumper.pcapng.PcapNgSimplePacketBlock
+import java.io.BufferedOutputStream
 import java.nio.ByteBuffer
 
+/**
+ * Dumps packets to a file in the PCAP-NG format.
+ *
+ * @param path The path to the file
+ * @param name The name of the file
+ * @param isSimple If true, the file will be written in the simple format.
+ *  If false, it will be written in the enhanced format.
+ */
 class PcapNgFilePacketDumper(
-    override var filename: String,
-) : AbstractFilePacketDumper() {
+    path: String,
+    name: String,
+    private val isSimple: Boolean = true,
+) : AbstractFilePacketDumper(path, name, "pcapng") {
+    private lateinit var outputStreamWriter: BufferedOutputStream
+
     override fun open() {
-        TODO("Not yet implemented")
+        super.open()
+        outputStreamWriter = BufferedOutputStream(file.outputStream())
+        outputStreamWriter.write(PcapNgSectionHeaderBlockLive.toBytes())
+        outputStreamWriter.flush()
+        outputStreamWriter.write(PcapNgInterfaceDescriptionBlock().toBytes())
+        outputStreamWriter.flush()
     }
 
     override fun close() {
-        TODO("Not yet implemented")
+        super.close()
+        outputStreamWriter.flush()
+        outputStreamWriter.close()
     }
 
+    /**
+     * Writes a packet to the file. In this case, the address parameter is ignored.
+     */
     override fun dumpBuffer(
         buffer: ByteBuffer,
         offset: Int,
@@ -21,6 +48,20 @@ class PcapNgFilePacketDumper(
         addresses: Boolean,
         etherType: EtherType?,
     ) {
-        TODO("Not yet implemented")
+        // optionally prepend the ethernet dummy header
+        val conversionBuffer =
+            if (etherType != null) {
+                prependDummyHeader(buffer, offset, length, etherType)
+            } else {
+                buffer
+            }
+
+        if (isSimple) {
+            val packetBlock = PcapNgSimplePacketBlock(conversionBuffer.array())
+            outputStreamWriter.write(packetBlock.toBytes())
+            outputStreamWriter.flush()
+        } else {
+            TODO()
+        }
     }
 }
