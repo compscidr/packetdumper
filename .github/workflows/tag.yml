@@ -1,0 +1,28 @@
+name: Build and Deploy
+
+on:
+  push:
+    # Pattern matched against refs/tags
+    tags:
+      - '*'           # Push events to every tag not containing /
+
+jobs:
+  build:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Build with Gradle
+        run: ./gradlew build
+      - run: echo "Build status report=${{ job.status }}."
+      - name: Deploy to Sonatype / Maven Central
+        # see signing variable names here: https://github.com/vanniktech/gradle-maven-publish-plugin/blob/da599468864f7be7f0c694f174baa797ba8bf189/plugin/src/integrationTest/kotlin/com/vanniktech/maven/publish/ProjectSpecRunner.kt#L229
+        run: ./gradlew -PcentralPortalToken='${{ secrets.CENTRAL_PORTAL_TOKEN }}' -PcentralPortalPassword='${{ secrets.CENTRAL_PORTAL_PASSWORD }}' -PsigningInMemoryKeyId='${{ secrets.SIGNING_KEY_ID }}' -PsigningInMemoryKeyPassword='${{ secrets.SIGNING_KEY_PASSWORD }}' -PsigningInMemoryKey='${{ secrets.SIGNING_KEY_IN_MEMORY }}' publishAllPublicationsToCentralPortal
