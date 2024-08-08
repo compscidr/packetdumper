@@ -81,8 +81,8 @@ class StringPacketDumper(
 
         var totalLength = 0
         if (etherType == null) {
-            buffer.position(offset)
-            totalLength = minOf(length, buffer.remaining())
+            conversionBuffer.position(offset)
+            totalLength = minOf(length, conversionBuffer.remaining())
             if (totalLength < length) {
                 logger.warn("Trying to dump more bytes than are in the buffer. Dumping up to buffer limit.")
             }
@@ -90,19 +90,19 @@ class StringPacketDumper(
 
         val output = StringBuilder()
         var i = 0
-        while (buffer.hasRemaining()) {
+        while (conversionBuffer.hasRemaining()) {
             if (addresses && (i % 16 == 0)) {
                 output.append(String.format("%08X  ", i))
             }
-            output.append(String.format("%02X", buffer.get()))
+            output.append(String.format("%02X", conversionBuffer.get()))
             i++
             if (i % 16 == 0) {
                 output.append("\n")
-            } else if (buffer.hasRemaining()) {
+            } else if (conversionBuffer.hasRemaining()) {
                 output.append(" ")
             }
         }
-        buffer.position(startingPosition)
+        conversionBuffer.position(startingPosition)
         return output.toString()
     }
 }

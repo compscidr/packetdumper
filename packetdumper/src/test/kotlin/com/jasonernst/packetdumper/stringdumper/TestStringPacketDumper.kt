@@ -1,5 +1,6 @@
 package com.jasonernst.packetdumper.stringdumper
 
+import com.jasonernst.packetdumper.EtherType
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.nio.ByteBuffer
@@ -655,5 +656,17 @@ class TestStringPacketDumper {
 
         // ensure that the buffer position is not changed
         assertEquals(0, buffer.position())
+    }
+
+    @Test fun dummyHeader() {
+        val buffer = ByteBuffer.wrap(byteArrayOf(0x00, 0x01, 0x02, 0x03, 0x04))
+        val hexString = stringPacketDumper.dumpBufferToString(buffer, 0, buffer.limit(), false, EtherType.IPv4)
+        assertEquals("14 C0 3E 55 0B 35 74 D0 2B 29 A5 18 08 00 00 01\n02 03 04", hexString)
+    }
+
+    @Test fun dummyHeaderWithAddress() {
+        val buffer = ByteBuffer.wrap(byteArrayOf(0x00, 0x01, 0x02, 0x03, 0x04))
+        val hexString = stringPacketDumper.dumpBufferToString(buffer, 0, buffer.limit(), true, EtherType.IPv4)
+        assertEquals("00000000  14 C0 3E 55 0B 35 74 D0 2B 29 A5 18 08 00 00 01\n00000010  02 03 04", hexString)
     }
 }
