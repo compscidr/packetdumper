@@ -1,4 +1,6 @@
 # packetdumper
+[![Maven Central](https://img.shields.io/maven-central/v/com.jasonernst.packetdumper/packetdumper?style=flat&logo=maven&label=maven-central&color=blue)](https://img.shields.io/maven-central/v/com.jasonernst.packetdumper/packetdumper?style=flat&logo=maven&label=maven-central&color=blue))
+[![codecov](https://codecov.io/gh/compscidr/packetdumper/graph/badge.svg?token=MZjRWQKz26)](https://codecov.io/gh/compscidr/packetdumper)
 A kotlin / android compatible buffer / packet dumper.
 
 ## Usage
