@@ -3,7 +3,9 @@ package com.jasonernst.packetdumper.serverdumper
 import com.jasonernst.packetdumper.EtherType
 import java.nio.ByteBuffer
 
-class PcapNgTcpServerPacketDumper(val listenPort: Int = DEFAULT_PORT) : AbstractServerPacketDumper() {
+class PcapNgTcpServerPacketDumper(
+    val listenPort: Int = DEFAULT_PORT,
+) : AbstractServerPacketDumper() {
     companion object {
         const val DEFAULT_PORT = 19000
     }
