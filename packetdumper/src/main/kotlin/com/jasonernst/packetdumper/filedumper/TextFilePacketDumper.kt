@@ -5,7 +5,6 @@ import com.jasonernst.packetdumper.stringdumper.StringPacketDumper
 import org.slf4j.LoggerFactory
 import java.io.BufferedWriter
 import java.io.File
-import java.io.IOException
 import java.nio.ByteBuffer
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicBoolean
@@ -42,7 +41,6 @@ class TextFilePacketDumper(
         }
         filename = "$path/${name}_${LocalDateTime.now()}.dump"
         file = File(filename)
-        bufferedWriter = file.bufferedWriter()
         logger.debug("TextFilePacketDumper opened file $filename")
         isOpen.set(true)
     }
@@ -51,16 +49,6 @@ class TextFilePacketDumper(
         if (!isOpen.get()) {
             logger.error("Trying to close a file that is already closed")
             return
-        }
-        try {
-            bufferedWriter.flush()
-        } catch (e: Exception) {
-            logger.error("Error flushing dump file", e)
-        }
-        try {
-            bufferedWriter.close()
-        } catch (e: Exception) {
-            logger.error("Error closing dump file", e)
         }
         isOpen.set(false)
     }
@@ -80,16 +68,6 @@ class TextFilePacketDumper(
             return
         }
         val output = stringDumper.dumpBufferToString(buffer, offset, length, addresses, etherType)
-        logger.debug("Intermediary output: $output")
-        try {
-            bufferedWriter.write(output)
-            bufferedWriter.write("\n")
-            bufferedWriter.flush()
-        } catch (e: IOException) {
-            if (!loggedError) {
-                logger.error("Error writing to dump file", e)
-                loggedError = true
-            }
-        }
+        file.writeText(output)
     }
 }
