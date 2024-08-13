@@ -104,6 +104,7 @@ class TestTextFilePacketDumper {
 
     @Test
     fun testRealFileDump() {
+        // this file has shorter addresses than we normally output, make sure it can be handled
         val filename = "/test_dumps/ipv4_tcp_header_goodchecksum.dump"
         val resource = javaClass.getResource(filename)
             ?: throw FileNotFoundException("Could not find test dump: $filename")
