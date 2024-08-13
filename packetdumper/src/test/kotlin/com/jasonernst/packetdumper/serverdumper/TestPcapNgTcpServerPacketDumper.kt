@@ -25,7 +25,10 @@ class TestPcapNgTcpServerPacketDumper {
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
 
-        fun waitForData(tcpClientSocket: Socket, expectedBytes: Int): ByteBuffer {
+        fun waitForData(
+            tcpClientSocket: Socket,
+            expectedBytes: Int,
+        ): ByteBuffer {
             logger.debug("Waiting to receive $expectedBytes bytes from the tcp dumper")
             var available = 0
             do {
