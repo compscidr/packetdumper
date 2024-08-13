@@ -59,7 +59,7 @@ class TextFilePacketDumper(
         fun parseFile(
             filename: String,
             addresses: Boolean = false,
-            etherType: EtherType?,
+            etherType: EtherType? = null,
         ): ByteBuffer {
             val stringDumper = StringPacketDumper()
             val file = File(filename)
@@ -70,7 +70,8 @@ class TextFilePacketDumper(
                 val lines = text.split("\n")
                 text = ""
                 for (line in lines) {
-                    text += line.drop(10) + " "
+                    val firstSpace = line.indexOfFirst { it == ' ' }
+                    text += line.drop(firstSpace + 1).trim() + " "
                 }
                 text = text.trimEnd() // remove the trailing space
                 logger.debug("No address text: $text")

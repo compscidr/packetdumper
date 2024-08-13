@@ -7,11 +7,12 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.FileNotFoundException
 import java.nio.ByteBuffer
 
 class TestTextFilePacketDumper {
     private val logger = LoggerFactory.getLogger(javaClass)
-    private val dumper = TextFilePacketDumper("/tmp", "test")
+    private var dumper = TextFilePacketDumper("/tmp", "test")
 
     /**
      * Dumps a buffer to a file using the dumper, closes the file. Opens it back up and reads the
@@ -99,5 +100,14 @@ class TestTextFilePacketDumper {
         val buffer = ByteBuffer.wrap(byteArrayOf(0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08))
         val readBuffer = writeReadBuffer(buffer, addresses = true, etherType = EtherType.IPv4)
         assertEquals(buffer, readBuffer)
+    }
+
+    @Test
+    fun testRealFileDump() {
+        val filename = "/test_dumps/ipv4_tcp_header_goodchecksum.dump"
+        val resource = javaClass.getResource(filename)
+            ?: throw FileNotFoundException("Could not find test dump: $filename")
+        val readBuffer = TextFilePacketDumper.parseFile(resource.file, true)
+        assertEquals(40, readBuffer.limit())
     }
 }
