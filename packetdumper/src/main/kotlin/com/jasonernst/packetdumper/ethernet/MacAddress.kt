@@ -45,7 +45,5 @@ class MacAddress {
         return bytes.contentEquals(other.bytes)
     }
 
-    override fun hashCode(): Int {
-        return bytes.contentHashCode()
-    }
+    override fun hashCode(): Int = bytes.contentHashCode()
 }
