@@ -35,4 +35,17 @@ class MacAddress {
         val DUMMY_MAC_SOURCE = MacAddress("14:c0:3e:55:0b:35")
         val DUMMY_MAC_DEST = MacAddress("74:d0:2b:29:a5:18")
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as MacAddress
+
+        return bytes.contentEquals(other.bytes)
+    }
+
+    override fun hashCode(): Int {
+        return bytes.contentHashCode()
+    }
 }

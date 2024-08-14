@@ -11,9 +11,9 @@ import java.nio.ByteBuffer
  * https://en.wikipedia.org/wiki/Ethernet_frame
  */
 class EthernetHeader(
-    private var destination: MacAddress,
-    private var source: MacAddress,
-    private var type: EtherType,
+    val destination: MacAddress,
+    val source: MacAddress,
+    val type: EtherType,
 ) {
     companion object {
         const val IP4_VERSION: UByte = 4u
@@ -90,4 +90,22 @@ class EthernetHeader(
     }
 
     override fun toString(): String = "EthernetHeader(destination=$destination, source=$source, type=$type, size=${size()})"
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is EthernetHeader) return false
+
+        if (destination != other.destination) return false
+        if (source != other.source) return false
+        if (type != other.type) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = destination.hashCode()
+        result = 31 * result + source.hashCode()
+        result = 31 * result + type.hashCode()
+        return result
+    }
 }
