@@ -669,4 +669,10 @@ class TestStringPacketDumper {
         val hexString = stringPacketDumper.dumpBufferToString(buffer, 0, buffer.limit(), true, EtherType.IPv4)
         assertEquals("00000000  14 C0 3E 55 0B 35 74 D0 2B 29 A5 18 08 00 00 01\n00000010  02 03 04", hexString)
     }
+
+    @Test fun shorterDumpThanLimit() {
+        val buffer = ByteBuffer.wrap(byteArrayOf(0x00, 0x01, 0x02, 0x03, 0x04))
+        val hexString = stringPacketDumper.dumpBufferToString(buffer, 0, buffer.limit() - 2, false)
+        assertEquals("00 01 02", hexString)
+    }
 }

@@ -71,12 +71,14 @@ class StringPacketDumper(
         etherType: EtherType? = null,
     ): String {
         val startingPosition = buffer.position()
+        val originalLimit = buffer.limit()
         // optionally prepend the ethernet dummy header
         val conversionBuffer =
             if (etherType != null) {
                 prependDummyHeader(buffer, offset, length, etherType)
             } else {
-                buffer
+                val actualLimit = minOf(originalLimit, offset + length)
+                buffer.limit(actualLimit)
             }
 
         var totalLength = 0
@@ -103,6 +105,7 @@ class StringPacketDumper(
             }
         }
         buffer.position(startingPosition)
+        buffer.limit(originalLimit)
         return output.toString()
     }
 }
