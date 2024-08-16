@@ -49,12 +49,15 @@ class PcapNgFilePacketDumper(
         addresses: Boolean,
         etherType: EtherType?,
     ) {
+        val startingPosition = buffer.position()
+        val originalLimit = buffer.limit()
         // optionally prepend the ethernet dummy header
         val conversionBuffer =
             if (etherType != null) {
                 prependDummyHeader(buffer, offset, length, etherType)
             } else {
-                buffer
+                val actualLimit = minOf(originalLimit, offset + length)
+                buffer.limit(actualLimit)
             }
 
         if (isSimple) {
@@ -67,5 +70,7 @@ class PcapNgFilePacketDumper(
             outputStreamWriter.write(packetBlock.toBytes())
             outputStreamWriter.flush()
         }
+        buffer.position(startingPosition)
+        buffer.limit(originalLimit)
     }
 }

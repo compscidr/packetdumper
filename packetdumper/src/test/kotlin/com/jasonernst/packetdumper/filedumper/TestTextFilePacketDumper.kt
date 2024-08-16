@@ -28,10 +28,12 @@ class TestTextFilePacketDumper {
         buffer: ByteBuffer,
         addresses: Boolean = false,
         etherType: EtherType? = null,
+        offset: Int = 0,
+        length: Int = buffer.limit(),
     ): ByteBuffer {
         val stringDumper = StringPacketDumper()
         logger.debug("write buffer: ${stringDumper.dumpBufferToString(buffer, 0, buffer.limit())}")
-        dumper.dumpBuffer(buffer, 0, buffer.limit(), addresses, etherType)
+        dumper.dumpBuffer(buffer, offset, length, addresses, etherType)
         dumper.close()
         return TextFilePacketDumper.parseFile(dumper.filename, addresses, etherType)
     }
@@ -99,6 +101,14 @@ class TestTextFilePacketDumper {
         dumper.open()
         val buffer = ByteBuffer.wrap(byteArrayOf(0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08))
         val readBuffer = writeReadBuffer(buffer, addresses = true, etherType = EtherType.IPv4)
+        assertEquals(buffer, readBuffer)
+    }
+
+    @Test fun shorterDumpThanLimit() {
+        dumper.open()
+        val buffer = ByteBuffer.wrap(byteArrayOf(0x00, 0x01, 0x02, 0x03, 0x04))
+        val readBuffer = writeReadBuffer(buffer, addresses = true, etherType = EtherType.IPv4, 0, buffer.limit() - 2)
+        buffer.limit(buffer.limit() - 2) // this will effectively remove the last two bytes
         assertEquals(buffer, readBuffer)
     }
 

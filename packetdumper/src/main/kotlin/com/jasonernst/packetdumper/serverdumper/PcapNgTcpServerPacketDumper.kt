@@ -133,11 +133,14 @@ class PcapNgTcpServerPacketDumper(
             // if there are no connected clients, no reason to dump
             return
         }
+        val startingPosition = buffer.position()
+        val originalLimit = buffer.limit()
         val conversionBuffer =
             if (etherType != null) {
                 prependDummyHeader(buffer, offset, length, etherType)
             } else {
-                buffer
+                val actualLimit = minOf(originalLimit, offset + length)
+                buffer.limit(actualLimit)
             }
         val packetBlock =
             if (isSimple) {
@@ -146,6 +149,8 @@ class PcapNgTcpServerPacketDumper(
                 // todo: timestamp
                 PcapNgEnhancedPacketBlock(conversionBuffer.array())
             }
+        buffer.position(startingPosition)
+        buffer.limit(originalLimit)
 
         with(connectionQueue.iterator()) {
             forEach {
