@@ -17,7 +17,7 @@ slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 test = ["junit-jupiter-api", "mockk"]
 
 [plugins]
-git-version = { id = "me.qoomon.git-versioning", version = "6.4.3" }
+git-version = { id = "me.qoomon.git-versioning", version = "6.4.4" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
 sonatype-maven-central = { id = "com.vanniktech.maven.publish", version = "0.29.0" }
