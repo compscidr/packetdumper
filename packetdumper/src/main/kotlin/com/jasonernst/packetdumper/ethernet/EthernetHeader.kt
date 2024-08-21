@@ -41,7 +41,7 @@ class EthernetHeader(
             val newBuffer = ByteBuffer.allocate(totalLength + ETHERNET_HEADER_LENGTH.toInt())
             val detectedEtherType =
                 if (etherType == EtherType.DETECT) {
-                    val ipVersion = buffer.get(offset).toUByte()
+                    val ipVersion = ((buffer.get(offset).toUInt() and 0xF0.toUInt()) shr 4).toUByte()
                     buffer.position(startingPosition)
                     getEtherTypeFromIPVersionByte(ipVersion)
                 } else {
