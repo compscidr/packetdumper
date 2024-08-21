@@ -1,7 +1,6 @@
 package com.jasonernst.packetdumper.stringdumper
 
 import com.jasonernst.packetdumper.ethernet.EtherType
-import com.jasonernst.packetdumper.ethernet.EthernetHeader
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.nio.ByteBuffer
