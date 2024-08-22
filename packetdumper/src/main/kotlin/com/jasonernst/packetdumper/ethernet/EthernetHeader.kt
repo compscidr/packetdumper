@@ -73,7 +73,7 @@ class EthernetHeader(
                 IP4_VERSION -> EtherType.IPv4
                 IP6_VERSION -> EtherType.IPv6
                 else -> {
-                    logger.warn("Couldn't detect etherType, got $ipVersion")
+                    logger.warn("Couldn't detect etherType, got $shiftedVersion")
                     EtherType.DETECT
                 }
             }
