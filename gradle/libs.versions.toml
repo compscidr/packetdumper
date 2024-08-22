@@ -5,6 +5,12 @@ kotlinter = "4.4.1"
 logback-classic = "1.5.7"
 mockk = "1.13.12"
 slf4j = "2.0.16"
+agp = "8.5.2"
+kotlin-version = "2.0.10"
+junit = "4.13.2"
+runner = "1.0.2"
+espresso-core = "3.0.2"
+appcompat-v7 = "28.0.0"
 
 [libraries]
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "jupiter" }
@@ -12,6 +18,10 @@ junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", vers
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback-classic" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+runner = { group = "com.android.support.test", name = "runner", version.ref = "runner" }
+espresso-core = { group = "com.android.support.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
+appcompat-v7 = { group = "com.android.support", name = "appcompat-v7", version.ref = "appcompat-v7" }
 
 [bundles]
 test = ["junit-jupiter-api", "mockk"]
@@ -22,3 +32,5 @@ jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin"
 kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
 sonatype-maven-central = { id = "com.vanniktech.maven.publish", version = "0.29.0" }
 gradleup-nmcp = { id = "com.gradleup.nmcp", version = "0.0.9"}
+android-application = { id = "com.android.application", version.ref = "agp" }
+jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin-version" }
