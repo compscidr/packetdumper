@@ -66,7 +66,7 @@ class StringPacketDumper(
     fun dumpBufferToString(
         buffer: ByteBuffer,
         offset: Int = 0,
-        length: Int = 0,
+        length: Int = buffer.remaining(),
         addresses: Boolean = false,
         etherType: EtherType? = null,
     ): String {

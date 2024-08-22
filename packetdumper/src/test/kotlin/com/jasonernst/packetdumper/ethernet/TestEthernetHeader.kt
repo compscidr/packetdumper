@@ -15,12 +15,14 @@ class TestEthernetHeader {
 
     @Test fun etherTypeDetection() {
         val ipv4Buffer = ByteBuffer.allocate(1)
-        ipv4Buffer.put(0, EthernetHeader.IP4_VERSION.toByte())
+        // need to shift left because its the high 4 bits of the byte that contain the version
+        ipv4Buffer.put(0, (EthernetHeader.IP4_VERSION.toUInt() shl 4).toByte())
         ipv4Buffer.rewind()
         assertEquals(EtherType.IPv4, EthernetHeader.getEtherTypeFromIPVersionByte(ipv4Buffer.get().toUByte()))
 
         val ipv6Buffer = ByteBuffer.allocate(1)
-        ipv6Buffer.put(0, EthernetHeader.IP6_VERSION.toByte())
+        // need to shift left because its the high 4 bits of the byte that contain the version
+        ipv6Buffer.put(0, (EthernetHeader.IP6_VERSION.toUInt() shl 4).toByte())
         ipv6Buffer.rewind()
         assertEquals(EtherType.IPv6, EthernetHeader.getEtherTypeFromIPVersionByte(ipv6Buffer.get().toUByte()))
 

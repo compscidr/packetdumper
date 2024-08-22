@@ -675,4 +675,14 @@ class TestStringPacketDumper {
         val hexString = stringPacketDumper.dumpBufferToString(buffer, 0, buffer.limit() - 2, false)
         assertEquals("00 01 02", hexString)
     }
+
+    @Test fun testTypeDetection() {
+        val bufferipv4 = ByteBuffer.wrap(byteArrayOf(0x45, 0x01, 0x02))
+        val hexStringv4 = stringPacketDumper.dumpBufferToString(bufferipv4, etherType = EtherType.DETECT)
+        assertEquals("14 C0 3E 55 0B 35 74 D0 2B 29 A5 18 08 00 45 01\n02", hexStringv4)
+
+        val bufferipv6 = ByteBuffer.wrap(byteArrayOf(0x60, 0x01, 0x02))
+        val hexStringv6 = stringPacketDumper.dumpBufferToString(bufferipv6, etherType = EtherType.DETECT)
+        assertEquals("14 C0 3E 55 0B 35 74 D0 2B 29 A5 18 86 DD 60 01\n02", hexStringv6)
+    }
 }

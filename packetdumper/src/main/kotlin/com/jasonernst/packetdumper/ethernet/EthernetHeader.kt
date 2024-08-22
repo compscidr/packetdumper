@@ -65,8 +65,11 @@ class EthernetHeader(
          * ethertype, it will just leave the type as 0xFFFF (detect) which maps to RESERVED in the
          * actual mapping.
          */
-        fun getEtherTypeFromIPVersionByte(ipVersion: UByte): EtherType =
-            when (ipVersion) {
+        fun getEtherTypeFromIPVersionByte(ipVersion: UByte): EtherType {
+            // in both ipv4 and ipv6, the version portion of the byte is actually the high 4 bits of
+            // the byte, so we need to zero out the bottom half and shift it right 4 bits
+            val shiftedVersion = ((ipVersion and 0xF0.toUByte()).toUInt() shr 4).toUByte()
+            return when (shiftedVersion) {
                 IP4_VERSION -> EtherType.IPv4
                 IP6_VERSION -> EtherType.IPv6
                 else -> {
@@ -74,6 +77,7 @@ class EthernetHeader(
                     EtherType.DETECT
                 }
             }
+        }
 
         fun dummyEthernet(etherType: EtherType): EthernetHeader =
             EthernetHeader(MacAddress.DUMMY_MAC_SOURCE, MacAddress.DUMMY_MAC_DEST, etherType)
