@@ -33,4 +33,4 @@ kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
 sonatype-maven-central = { id = "com.vanniktech.maven.publish", version = "0.29.0" }
 gradleup-nmcp = { id = "com.gradleup.nmcp", version = "0.0.9"}
 android-application = { id = "com.android.application", version.ref = "agp" }
-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin-version" }
+jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
