@@ -46,7 +46,9 @@ class TextFilePacketDumper(
             }
             return
         }
-        val output = stringDumper.dumpBufferToString(buffer, offset, length, addresses, etherType)
+        // extra space added so that the hexdump import doesn't skip the last byte, see:
+        // https://osqa-ask.wireshark.org/questions/39177/wireshark-import-hex-dump-always-strip-last-byte-of-the-packet/
+        val output = stringDumper.dumpBufferToString(buffer, offset, length, addresses, etherType) + " "
         file.writeText(output)
     }
 
