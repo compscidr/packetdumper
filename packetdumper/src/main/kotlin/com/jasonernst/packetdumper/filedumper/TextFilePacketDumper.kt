@@ -65,8 +65,8 @@ class TextFilePacketDumper(
         ): ByteBuffer {
             val stringDumper = StringPacketDumper()
             val file = File(filename)
-            var text = file.readText()
-            logger.debug("raw text: $text")
+            var text = file.readText().trimEnd() // handle the last space added in dumpBuffer
+            logger.debug("raw text: '$text'")
 
             if (addresses) {
                 val lines = text.split("\n")
