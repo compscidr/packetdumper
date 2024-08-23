@@ -1,8 +1,11 @@
 [versions]
+compose-bom = "2024.08.00"
+compose-activity = "1.9.1"
 jupiter = "5.11.0"
 kotlin = "2.0.20"
 kotlinter = "4.4.1"
 logback-classic = "1.5.7"
+material = "1.12.0"
 mockk = "1.13.12"
 slf4j = "2.0.16"
 agp = "8.5.2"
@@ -13,9 +16,14 @@ espresso-core = "3.0.2"
 appcompat-v7 = "28.0.0"
 
 [libraries]
+compose-bom =  { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
+compose-activity = { module = "androidx.activity:activity-compose", version.ref ="compose-activity" }
+compose-ui = { module = "androidx.compose.ui:ui" }
+compose-material3 = { module = "androidx.compose.material3:material3" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "jupiter" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "jupiter" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback-classic" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -25,6 +33,7 @@ appcompat-v7 = { group = "com.android.support", name = "appcompat-v7", version.r
 
 [bundles]
 test = ["junit-jupiter-api", "mockk"]
+compose = ["compose-activity", "compose-ui", "compose-material3" ]
 
 [plugins]
 git-version = { id = "me.qoomon.git-versioning", version = "6.4.4" }
@@ -34,3 +43,4 @@ sonatype-maven-central = { id = "com.vanniktech.maven.publish", version = "0.29.
 gradleup-nmcp = { id = "com.gradleup.nmcp", version = "0.0.9"}
 android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
