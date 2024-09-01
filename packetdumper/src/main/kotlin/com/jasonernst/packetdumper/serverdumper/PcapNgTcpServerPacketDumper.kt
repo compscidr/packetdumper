@@ -146,8 +146,8 @@ class PcapNgTcpServerPacketDumper(
             if (isSimple) {
                 PcapNgSimplePacketBlock(conversionBuffer.array())
             } else {
-                // todo: timestamp
-                PcapNgEnhancedPacketBlock(conversionBuffer.array())
+                val timestamp = System.currentTimeMillis()
+                PcapNgEnhancedPacketBlock(conversionBuffer.array(), timestamp = timestamp)
             }
         buffer.position(startingPosition)
         buffer.limit(originalLimit)
