@@ -65,8 +65,8 @@ class PcapNgFilePacketDumper(
             outputStreamWriter.write(packetBlock.toBytes())
             outputStreamWriter.flush()
         } else {
-            // todo: timestamp
-            val packetBlock = PcapNgEnhancedPacketBlock(conversionBuffer.array())
+            val timestamp = System.currentTimeMillis()
+            val packetBlock = PcapNgEnhancedPacketBlock(conversionBuffer.array(), timestamp = timestamp)
             outputStreamWriter.write(packetBlock.toBytes())
             outputStreamWriter.flush()
         }
