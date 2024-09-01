@@ -43,6 +43,9 @@ dependencies {
     implementation(libs.material) // required for the themes.xml
     implementation(platform(libs.compose.bom))
     implementation(libs.bundles.compose)
+    implementation(libs.accompanist.permissions)
+    implementation(libs.slf4j.api)
+    implementation(libs.logback.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.runner)
