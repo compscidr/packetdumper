@@ -146,7 +146,9 @@ class PcapNgTcpServerPacketDumper(
             if (isSimple) {
                 PcapNgSimplePacketBlock(conversionBuffer.array())
             } else {
-                val timestamp = System.currentTimeMillis()
+                // convert the nano time to microseconds since that is the default if we don't set
+                // the if_tsresol in the interface description block
+                val timestamp = System.nanoTime() / 1000
                 PcapNgEnhancedPacketBlock(conversionBuffer.array(), timestamp = timestamp)
             }
         buffer.position(startingPosition)
