@@ -1,5 +1,7 @@
 package com.jasonernst.example_android
 
+import android.content.Intent
+import android.net.VpnService
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,6 +15,11 @@ class MainActivity: ComponentActivity() {
             MaterialTheme {
                 MainScreen()
             }
+        }
+
+        if (VpnService.prepare(applicationContext) == null) {
+            val intent = Intent(applicationContext, PacketDumperVPNService::class.java)
+            startService(intent)
         }
     }
 }
