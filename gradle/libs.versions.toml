@@ -2,7 +2,7 @@
 jupiter = "5.11.2"
 kotlin = "2.0.20"
 kotlinter = "4.4.1"
-logback-classic = "1.5.8"
+logback-classic = "1.5.9"
 mockk = "1.13.12"
 slf4j = "2.0.16"
 
