@@ -65,8 +65,10 @@ class PcapNgFilePacketDumper(
             outputStreamWriter.write(packetBlock.toBytes())
             outputStreamWriter.flush()
         } else {
-            // todo: timestamp
-            val packetBlock = PcapNgEnhancedPacketBlock(conversionBuffer.array())
+            // convert the nano time to microseconds since that is the default if we don't set
+            // the if_tsresol in the interface description block
+            val timestamp = System.nanoTime() / 1000
+            val packetBlock = PcapNgEnhancedPacketBlock(conversionBuffer.array(), timestamp = timestamp)
             outputStreamWriter.write(packetBlock.toBytes())
             outputStreamWriter.flush()
         }
