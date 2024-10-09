@@ -5,9 +5,6 @@ pluginManagement {
         mavenCentral()
         maven(url = "https://oss.sonatype.org/content/repositories/snapshots/")
     }
-    plugins {
-        kotlin("jvm") version "2.0.20"
-    }
 }
 plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
@@ -22,3 +19,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "packetdumper"
 include(":packetdumper")
+include(":example-android")
