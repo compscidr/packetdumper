@@ -46,6 +46,7 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation(libs.slf4j.api)
     implementation(libs.logback.android)
+    implementation(libs.knet)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.runner)

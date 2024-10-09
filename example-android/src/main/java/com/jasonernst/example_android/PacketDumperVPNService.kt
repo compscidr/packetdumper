@@ -5,6 +5,9 @@ import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import android.os.ParcelFileDescriptor.AutoCloseInputStream
 import android.os.ParcelFileDescriptor.AutoCloseOutputStream
+import com.jasonernst.knet.Packet
+import com.jasonernst.packetdumper.ethernet.EtherType
+import com.jasonernst.packetdumper.stringdumper.StringPacketDumper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -47,7 +50,7 @@ class PacketDumperVPNService: VpnService() {
             .addRoute("2000::", 3) // https://wiki.strongswan.org/issues/1261
 
         vpnFileDescriptor = builder.establish()
-        logger.debug("VPN established: {}", vpnFileDescriptor)
+        logger.debug("VPN established, FD: {}", vpnFileDescriptor?.fd)
         val inputStream = AutoCloseInputStream(vpnFileDescriptor)
         val outputStream = AutoCloseOutputStream(vpnFileDescriptor)
         running.set(true)
@@ -57,7 +60,7 @@ class PacketDumperVPNService: VpnService() {
         }
 
         writeScope.launch {
-            readFromInternetWritetoOS(outputStream)
+            readFromInternetWriteToOS(outputStream)
         }
     }
 
@@ -84,8 +87,6 @@ class PacketDumperVPNService: VpnService() {
                 stream.put(readBuffer, 0, bytesRead)
                 stream.flip()
                 val packets = parseStream(stream)
-
-
             }
         }
     }
@@ -106,15 +107,17 @@ class PacketDumperVPNService: VpnService() {
      * may be unreachable, time exceeded, etc, or just a successful ping response.
      */
     private fun parseStream(stream: ByteBuffer): List<Packet> {
+        logger.debug("GOT STREAM: \n{}", StringPacketDumper().dumpBufferToString(buffer = stream, addresses = true, etherType = EtherType.DETECT))
         val packets = mutableListOf<Packet>()
         while (stream.hasRemaining()) {
             val position = stream.position()
             try {
                 val packet = Packet.fromStream(stream)
+                logger.debug("Parsed packet: {}", packet)
                 packets.add(packet)
             } catch (e: IllegalArgumentException) {
                 // don't bother to rewind the stream, just log and continue at position + 1
-                logger.error("Error parsing stream", e)
+                logger.error("Error parsing stream: ", e)
                 stream.position(position + 1)
             } catch (e: PacketTooShortException) {
                 // rewind the stream to before we tried parsing so we can try again later
@@ -126,7 +129,7 @@ class PacketDumperVPNService: VpnService() {
 
     }
 
-    private suspend fun readFromInternetWritetoOS(outputStream: AutoCloseOutputStream) {
+    private suspend fun readFromInternetWriteToOS(outputStream: AutoCloseOutputStream) {
         withContext(Dispatchers.IO) {
             while (running.get()) {
                 packetQueue.take().let { packet ->
