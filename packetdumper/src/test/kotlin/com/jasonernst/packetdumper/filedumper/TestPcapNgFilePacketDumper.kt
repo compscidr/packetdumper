@@ -10,7 +10,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
-import java.io.File
 import java.nio.ByteBuffer
 
 class TestPcapNgFilePacketDumper {
@@ -24,7 +23,7 @@ class TestPcapNgFilePacketDumper {
 
         // delete the file created for the test to cleanup
         try {
-            //File(dumper.filename).delete()
+            // File(dumper.filename).delete()
             logger.debug("Deleted file ${dumper.filename}")
         } catch (e: Exception) {
             // ignore
