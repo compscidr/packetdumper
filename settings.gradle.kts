@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "packetdumper"
 include(":packetdumper")
+include(":example-android")
