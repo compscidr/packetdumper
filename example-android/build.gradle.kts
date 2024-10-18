@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.jasonernst.example_android"
-        minSdk = 24
+        minSdk = 29
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -40,14 +40,20 @@ android {
 }
 
 dependencies {
-    implementation(libs.material) // required for the themes.xml
     implementation(platform(libs.compose.bom))
     implementation(libs.bundles.compose)
+    implementation(libs.compose.ui.tooling)
     implementation(libs.accompanist.permissions)
-    implementation(libs.slf4j.api)
-    implementation(libs.logback.android)
-    implementation(libs.knet)
 
+    implementation(libs.icmp.common)
+    implementation(libs.icmp.android)
+    implementation(libs.kanonproxy)
+    implementation(libs.knet)
+    implementation(libs.logback.android)
+    implementation(libs.material) // required for the themes.xml
+    implementation(libs.slf4j.api)
+
+    debugImplementation(libs.compose.ui.tooling.preview)
     testImplementation(libs.junit)
     androidTestImplementation(libs.runner)
     androidTestImplementation(libs.espresso.core)

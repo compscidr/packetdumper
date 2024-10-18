@@ -5,10 +5,15 @@ import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import android.os.ParcelFileDescriptor.AutoCloseInputStream
 import android.os.ParcelFileDescriptor.AutoCloseOutputStream
+import com.jasonernst.example_android.ui.SessionViewModel
+import com.jasonernst.icmp_android.ICMPAndroid
+import com.jasonernst.kanonproxy.KAnonProxy
+import com.jasonernst.kanonproxy.VpnProtector
 import com.jasonernst.knet.Packet
 import com.jasonernst.knet.network.nextheader.ICMPNextHeaderWrapper
 import com.jasonernst.knet.transport.TransportHeader
 import com.jasonernst.packetdumper.ethernet.EtherType
+import com.jasonernst.packetdumper.serverdumper.PcapNgTcpServerPacketDumper
 import com.jasonernst.packetdumper.stringdumper.StringPacketDumper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,12 +21,14 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
+import java.net.DatagramSocket
+import java.net.Socket
 import java.nio.ByteBuffer
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 
-class PacketDumperVPNService: VpnService() {
+class PacketDumperVPNService: VpnService(), VpnProtector {
     private val logger = LoggerFactory.getLogger(javaClass)
     private var vpnFileDescriptor: ParcelFileDescriptor? = null
     private val readJob = SupervisorJob() // https://stackoverflow.com/a/63407811
@@ -31,6 +38,9 @@ class PacketDumperVPNService: VpnService() {
     private val running = AtomicBoolean(false)
     private val readBuffer = ByteArray(MAX_RECEIVE_BUFFER_SIZE)
     private val packetQueue = LinkedBlockingDeque<Packet>()
+    private val kAnonProxy = KAnonProxy(ICMPAndroid, this)
+    private val sessionViewModel = SessionViewModel.getInstance()
+    private val packetDumper = PcapNgTcpServerPacketDumper()
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         logger.debug("onStartCommand: {} {} {}", intent, flags, startId)
@@ -43,6 +53,7 @@ class PacketDumperVPNService: VpnService() {
             logger.error("VPN already running")
             return
         }
+        packetDumper.start()
 
         val builder = Builder()
             .addAddress(VPN_ADDRESS, VPN_SUBNET_MASK)
@@ -92,7 +103,11 @@ class PacketDumperVPNService: VpnService() {
                 if (totalBytesRead > 0) {
                     logger.debug("Read {} bytes from OS", totalBytesRead)
                     stream.flip()
-                    handlePackets(parseStream(stream))
+                    val packets = parseStream(stream)
+                    for (packet in packets) {
+                        packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
+                    }
+                    kAnonProxy.handlePackets(packets)
                 } else {
                     Thread.sleep(100) // wait for data to arrive
                 }
@@ -143,36 +158,37 @@ class PacketDumperVPNService: VpnService() {
         return packets
     }
 
-    private fun handlePackets(packets: List<Packet>) {
-        packets.forEach { packet ->
-            if (packet.nextHeaders is TransportHeader) {
-                // todo: use https://github.com/compscidr/kanonproxy
-            } else if (packet.nextHeaders is ICMPNextHeaderWrapper) {
-                // todo: use https://github.com/compscidr/kanonproxy
-            } else {
-                logger.error("Unsupported packet type: {}", packet.javaClass)
-            }
-        }
-    }
-
     private suspend fun readFromInternetWriteToOS(outputStream: AutoCloseOutputStream) {
         withContext(Dispatchers.IO) {
             while (running.get()) {
-                packetQueue.take().let { packet ->
-                    val bytesToWrite = packet.toByteArray()
-                    outputStream.write(bytesToWrite)
-                    outputStream.flush()
-                    logger.debug("Wrote {} bytes to OS", bytesToWrite.size)
-                }
+                val packet = kAnonProxy.takeResponse()
+                packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
+                val bytesToWrite = packet.toByteArray()
+                outputStream.write(bytesToWrite)
+                outputStream.flush()
+                logger.debug("Wrote {} bytes to OS", bytesToWrite.size)
             }
         }
     }
 
     override fun stopService(name: Intent?): Boolean {
+        packetDumper.stop()
         vpnFileDescriptor?.close()
         readJob.cancel()
         writeJob.cancel()
         return super.stopService(name)
+    }
+
+    override fun protectSocketFd(socket: Int) {
+        protect(socket)
+    }
+
+    override fun protectUDPSocket(socket: DatagramSocket) {
+        protect(socket)
+    }
+
+    override fun protectTCPSocket(socket: Socket) {
+        protect(socket)
     }
 
     companion object {

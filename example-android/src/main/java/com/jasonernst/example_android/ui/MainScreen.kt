@@ -67,4 +67,9 @@ fun MainScreen() {
     } else {
         logger.debug("VPN permission granted")
     }
+
+    val sessionViewModel = SessionViewModel.getInstance()
+    for (session in sessionViewModel.sessionMap.values) {
+        SessionItem(session = session)
+    }
 }
