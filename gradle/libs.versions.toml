@@ -7,21 +7,15 @@ espresso-core = "3.0.2"
 junit = "4.13.2"
 jupiter = "5.11.2"
 knet = "0.0.4"
-kotlin = "2.0.20"
+kotlin = "2.0.21"
 kotlinter = "4.4.1"
 logback-android = "3.0.0"
-logback-classic = "1.5.9"
+logback-classic = "1.5.11"
 material = "1.12.0"
 mockk = "1.13.13"
-runner = "1.0.2"
 slf4j = "2.0.16"
 
 [libraries]
-accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
-compose-bom =  { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
-compose-activity = { module = "androidx.activity:activity-compose", version.ref ="compose-activity" }
-compose-ui = { module = "androidx.compose.ui:ui" }
-compose-material3 = { module = "androidx.compose.material3:material3" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "jupiter" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "jupiter" }
 logback-android = { module = "com.github.tony19:logback-android", version.ref = "logback-android" }
@@ -36,14 +30,10 @@ knet = { group = "com.jasonernst.knet", name = "knet", version.ref = "knet" }
 
 [bundles]
 test = ["junit-jupiter-api", "mockk"]
-compose = ["compose-activity", "compose-ui", "compose-material3" ]
 
 [plugins]
 git-version = { id = "me.qoomon.git-versioning", version = "6.4.4" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
-sonatype-maven-central = { id = "com.vanniktech.maven.publish", version = "0.29.0" }
+sonatype-maven-central = { id = "com.vanniktech.maven.publish", version = "0.30.0" }
 gradleup-nmcp = { id = "com.gradleup.nmcp", version = "0.0.9"}
-android-application = { id = "com.android.application", version.ref = "agp" }
-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
