@@ -10,7 +10,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
-import java.io.File
 import java.nio.ByteBuffer
 
 class TestPcapNgFilePacketDumper {
@@ -24,7 +23,7 @@ class TestPcapNgFilePacketDumper {
 
         // delete the file created for the test to cleanup
         try {
-            File(dumper.filename).delete()
+            // File(dumper.filename).delete()
             logger.debug("Deleted file ${dumper.filename}")
         } catch (e: Exception) {
             // ignore
@@ -139,6 +138,7 @@ class TestPcapNgFilePacketDumper {
         val buffer = ByteBuffer.wrap(byteArrayOf(0x01, 0x02, 0x03, 0x04))
         val buffer2 = ByteBuffer.wrap(byteArrayOf(0x05, 0x06, 0x07, 0x08))
         dumper.dumpBuffer(buffer, 0, buffer.limit(), false, null)
+        Thread.sleep(500)
         dumper.dumpBuffer(buffer2, 0, buffer2.limit(), false, null)
         dumper.close()
         val readBuffer = readFile(dumper)

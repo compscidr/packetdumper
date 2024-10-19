@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class PcapNgTcpServerPacketDumper(
     private val listenPort: Int = DEFAULT_PORT,
     private val isSimple: Boolean = true,
+    private val callback: ConnectedUsersChangedCallback? = null,
 ) : AbstractServerPacketDumper() {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val isRunning = AtomicBoolean(false)
@@ -79,6 +80,7 @@ class PcapNgTcpServerPacketDumper(
                             outputstream.flush()
 
                             connectionQueue.add(client)
+                            issueCallback()
                         } catch (e: Exception) {
                             logger.warn(
                                 "Error writing to wireshark client, it may have " +
@@ -154,6 +156,7 @@ class PcapNgTcpServerPacketDumper(
         buffer.position(startingPosition)
         buffer.limit(originalLimit)
 
+        var failedConnection = false
         with(connectionQueue.iterator()) {
             forEach {
                 try {
@@ -162,9 +165,18 @@ class PcapNgTcpServerPacketDumper(
                     outputstream.flush()
                 } catch (e: Exception) {
                     remove()
+                    failedConnection = true
                 }
             }
         }
+
+        if (failedConnection) {
+            issueCallback()
+        }
+    }
+
+    private fun issueCallback() {
+        callback?.onConnectedUsersChanged(connectionQueue.map { it.remoteSocketAddress.toString() })
     }
 
     private fun logAllIPAddresses(
