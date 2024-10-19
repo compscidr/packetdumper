@@ -182,7 +182,6 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
                 //logger.debug("Stream position after parsing: {} limit: {}", stream.position(), stream.limit())
                 val ipHeader = packet.ipHeader
                 val nextHeader = packet.nextHeaders
-                val payload = packet.payload
 
                 val sourcePort = if (nextHeader is TransportHeader) {
                     nextHeader.sourcePort
@@ -238,8 +237,45 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
         withContext(Dispatchers.IO) {
             while (running.get()) {
                 val packet = kAnonProxy.takeResponse()
+                logger.debug("Got packet from proxy: {}", packet)
                 packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
                 val bytesToWrite = packet.toByteArray()
+
+                val ipHeader = packet.ipHeader
+                val nextHeader = packet.nextHeaders
+
+                // source / dest are swapped for the return traffic so we get the same "session"
+                val sourcePort = if (nextHeader is TransportHeader) {
+                    nextHeader.destinationPort
+                } else {
+                    0u
+                }
+                val destinationPort = if (nextHeader is TransportHeader) {
+                    nextHeader.sourcePort
+                } else {
+                    0u
+                }
+
+                val protocol = IpType.fromValue(ipHeader.protocol)
+                val key = Session.getKey(
+                    ipHeader.destinationAddress.toString(),
+                    sourcePort.toInt(),
+                    ipHeader.sourceAddress.toString(),
+                    destinationPort.toInt(),
+                    protocol.toString()
+                )
+                val session = sessionViewModel.sessionMap.getOrPut(key) {
+                    Session(
+                        ipHeader.sourceAddress.toString(),
+                        sourcePort.toInt(),
+                        ipHeader.destinationAddress.toString(),
+                        destinationPort.toInt(),
+                        protocol.toString(),
+                        System.currentTimeMillis()
+                    )
+                }
+                session.incomingPackets.intValue++
+                session.incomingBytes.intValue += ipHeader.getTotalLength().toInt()
 
                 try {
                     outputStream.write(bytesToWrite)

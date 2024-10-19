@@ -58,6 +58,14 @@ fun ExpandedSessionItem(session: Session) {
             Text("Outgoing bytes: ")
             Text(text = session.outgoingBytes.intValue.toString())
         }
+        Row {
+            Text("Incoming packets: ")
+            Text(text = session.incomingPackets.intValue.toString())
+        }
+        Row {
+            Text("Incoming bytes: ")
+            Text(text = session.incomingBytes.intValue.toString())
+        }
     }
 }
 
