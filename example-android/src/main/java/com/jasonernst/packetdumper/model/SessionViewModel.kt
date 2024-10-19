@@ -1,4 +1,4 @@
-package com.jasonernst.example_android.model
+package com.jasonernst.packetdumper.model
 import android.content.SharedPreferences
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel

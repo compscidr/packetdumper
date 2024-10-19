@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.jasonernst.example_android"
+    namespace = "com.jasonernst.packetdumper"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.jasonernst.example_android"
+        applicationId = "com.jasonernst.packetdumper"
         minSdk = 29
         targetSdk = 34
         versionCode = 1
@@ -41,6 +41,7 @@ android {
 
 dependencies {
     implementation(platform(libs.compose.bom))
+    implementation(libs.androidx.preference)
     implementation(libs.bundles.compose)
     implementation(libs.compose.ui.tooling)
     implementation(libs.accompanist.permissions)

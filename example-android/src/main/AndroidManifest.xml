@@ -27,7 +27,7 @@
         </activity>
 
         <service
-            android:name=".PacketDumperVPNService"
+            android:name=".PacketDumperVpnService"
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="specialUse"

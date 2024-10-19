@@ -1,6 +1,7 @@
 [versions]
 accompanistPermissions = "0.36.0"
 agp = "8.5.2"
+androidx_preference = "1.2.1"
 compose-bom = "2024.10.00"
 compose-activity = "1.9.3"
 compose_ui_tooling = "1.7.4"
@@ -20,6 +21,7 @@ runner = "1.0.2"
 slf4j = "2.0.16"
 
 [libraries]
+androidx_preference = { module = "androidx.preference:preference-ktx", version.ref = "androidx_preference" }
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
 compose-bom =  { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 compose-activity = { module = "androidx.activity:activity-compose", version.ref ="compose-activity" }

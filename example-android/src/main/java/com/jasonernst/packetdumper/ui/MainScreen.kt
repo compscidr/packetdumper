@@ -1,11 +1,11 @@
-package com.jasonernst.example_android.ui
+package com.jasonernst.packetdumper.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.jasonernst.example_android.PacketDumperVpnService
-import com.jasonernst.example_android.VpnPermissionHelper.isVPNPermissionMissing
-import com.jasonernst.example_android.model.SessionViewModel
+import com.jasonernst.packetdumper.PacketDumperVpnService
+import com.jasonernst.packetdumper.VpnPermissionHelper.isVPNPermissionMissing
+import com.jasonernst.packetdumper.model.SessionViewModel
 import org.slf4j.LoggerFactory
 
 @OptIn(ExperimentalPermissionsApi::class)

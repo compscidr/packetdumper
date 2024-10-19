@@ -1,4 +1,4 @@
-package com.jasonernst.example_android
+package com.jasonernst.packetdumper
 
 import android.content.Intent
 import android.net.VpnService
@@ -8,7 +8,7 @@ import android.os.ParcelFileDescriptor
 import android.os.ParcelFileDescriptor.AutoCloseInputStream
 import android.os.ParcelFileDescriptor.AutoCloseOutputStream
 import androidx.preference.PreferenceManager
-import com.jasonernst.example_android.model.SessionViewModel
+import com.jasonernst.packetdumper.model.SessionViewModel
 import com.jasonernst.icmp_android.ICMPAndroid
 import com.jasonernst.kanonproxy.KAnonProxy
 import com.jasonernst.kanonproxy.VpnProtector
@@ -19,6 +19,7 @@ import com.jasonernst.packetdumper.stringdumper.StringPacketDumper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import java.net.DatagramSocket
@@ -41,7 +42,7 @@ class PacketDumperVpnService: VpnService(), VpnProtector {
     private val kAnonProxy = KAnonProxy(ICMPAndroid, this)
     private lateinit var sessionViewModel: SessionViewModel
     private val packetDumper = PcapNgTcpServerPacketDumper()
-    private val binder = Binder()
+    private val binder = LocalBinder()
 
     /**
      * Class used for the client Binder. Because we know this service always
@@ -59,12 +60,9 @@ class PacketDumperVpnService: VpnService(), VpnProtector {
 
     override fun onCreate() {
         logger.debug("ON CREATE CALLED")
-//        CoroutineScope(Dispatchers.IO).launch {
-//            prepareVPN()
-//        }
     }
 
-    private fun prepareVPN() {
+    fun startVPN() {
         if (running.get()) {
             logger.error("VPN already running")
             return
@@ -79,22 +77,31 @@ class PacketDumperVpnService: VpnService(), VpnProtector {
             //.addDnsServer(DNS6_SERVER)
             .setMtu(MAX_RECEIVE_BUFFER_SIZE)
             .addRoute("0.0.0.0", 0)
-            //.addRoute("2000::", 3) // https://wiki.strongswan.org/issues/1261
+        //.addRoute("2000::", 3) // https://wiki.strongswan.org/issues/1261
 
         vpnFileDescriptor = builder.establish()
         logger.debug("VPN established, FD: {}", vpnFileDescriptor?.fd)
-//        val inputStream = AutoCloseInputStream(vpnFileDescriptor)
-//        val outputStream = AutoCloseOutputStream(vpnFileDescriptor)
+        val inputStream = AutoCloseInputStream(vpnFileDescriptor)
+        val outputStream = AutoCloseOutputStream(vpnFileDescriptor)
         running.set(true)
         sessionViewModel.serviceStarted()
 
-//        readScope.launch {
-//            readFromOSWriteToInternet(inputStream)
-//        }
-//
-//        writeScope.launch {
-//            readFromInternetWriteToOS(outputStream)
-//        }
+        readScope.launch {
+            readFromOSWriteToInternet(inputStream)
+        }
+
+        writeScope.launch {
+            readFromInternetWriteToOS(outputStream)
+        }
+    }
+
+    fun stopVPN() {
+        running.set(false)
+        packetDumper.stop()
+        vpnFileDescriptor?.close()
+        readJob.cancel()
+        writeJob.cancel()
+        sessionViewModel.serviceStopped()
     }
 
     private suspend fun readFromOSWriteToInternet(inputStream: AutoCloseInputStream) {
@@ -182,16 +189,21 @@ class PacketDumperVpnService: VpnService(), VpnProtector {
                 val packet = kAnonProxy.takeResponse()
                 packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
                 val bytesToWrite = packet.toByteArray()
-                outputStream.write(bytesToWrite)
-                outputStream.flush()
-                //logger.debug("Wrote {} bytes to OS", bytesToWrite.size)
+
+                try {
+                    outputStream.write(bytesToWrite)
+                    outputStream.flush()
+                    //logger.debug("Wrote {} bytes to OS", bytesToWrite.size)
+                } catch (e: Exception) {
+                    logger.error("Error writing to OS, probably shutting down ", e)
+                }
             }
         }
     }
 
     override fun onBind(intent: Intent): IBinder? {
         logger.debug("ON BIND CALLED")
-        return super.onBind(intent)
+        return binder
     }
 
     override fun onUnbind(intent: Intent): Boolean {

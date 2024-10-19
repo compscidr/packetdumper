@@ -1,4 +1,4 @@
-package com.jasonernst.example_android.ui
+package com.jasonernst.packetdumper.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,7 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.jasonernst.kanonproxy.Session
-import java.net.InetAddress
 
 @Composable
 fun SessionItem(session: Session) {
