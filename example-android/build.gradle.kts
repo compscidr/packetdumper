@@ -47,10 +47,20 @@ dependencies {
     implementation(libs.compose.ui.tooling)
     implementation(libs.accompanist.permissions)
 
-    implementation(libs.icmp.common)
-    implementation(libs.icmp.android)
-    implementation(libs.kanonproxy)
-    implementation(libs.knet)
+    // excludes are here so we use the local project version for compiling rather than previously
+    // packaged releases of this library which each of these other libraries depend on
+    implementation(libs.icmp.common) {
+        exclude(group = "com.jasonernst.packetdumper", module = "packetdumper")
+    }
+    implementation(libs.icmp.android) {
+        exclude(group = "com.jasonernst.packetdumper", module = "packetdumper")
+    }
+    implementation(libs.kanonproxy) {
+        exclude(group = "com.jasonernst.packetdumper", module = "packetdumper")
+    }
+    implementation(libs.knet) {
+        exclude(group = "com.jasonernst.packetdumper", module = "packetdumper")
+    }
     implementation(libs.logback.android)
     implementation(libs.material) // required for the themes.xml
     implementation(libs.slf4j.api)
