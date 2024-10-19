@@ -75,4 +75,3 @@ println(hexString)
 
 ## TODO
 - [ ] Support options for pcap blocks
-- [ ] Timestamps on enhanced packet blocks
