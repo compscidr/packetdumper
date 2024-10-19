@@ -40,6 +40,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":packetdumper"))
     implementation(platform(libs.compose.bom))
     implementation(libs.androidx.preference)
     implementation(libs.bundles.compose)

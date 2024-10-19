@@ -5,12 +5,13 @@ import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.jasonernst.packetdumper.PacketDumperVpnService
 import com.jasonernst.packetdumper.VpnPermissionHelper.isVPNPermissionMissing
+import com.jasonernst.packetdumper.VpnUiService
 import com.jasonernst.packetdumper.model.SessionViewModel
 import org.slf4j.LoggerFactory
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MainScreen(sessionViewModel: SessionViewModel, vpnService: PacketDumperVpnService) {
+fun MainScreen(sessionViewModel: SessionViewModel, vpnService: VpnUiService) {
     val logger = LoggerFactory.getLogger("MainScreen")
     val context = LocalContext.current
 

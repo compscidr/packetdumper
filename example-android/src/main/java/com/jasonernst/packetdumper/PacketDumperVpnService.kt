@@ -13,7 +13,10 @@ import com.jasonernst.icmp_android.ICMPAndroid
 import com.jasonernst.kanonproxy.KAnonProxy
 import com.jasonernst.kanonproxy.VpnProtector
 import com.jasonernst.knet.Packet
+import com.jasonernst.knet.network.ip.IpType
+import com.jasonernst.knet.transport.TransportHeader
 import com.jasonernst.packetdumper.ethernet.EtherType
+import com.jasonernst.packetdumper.serverdumper.ConnectedUsersChangedCallback
 import com.jasonernst.packetdumper.serverdumper.PcapNgTcpServerPacketDumper
 import com.jasonernst.packetdumper.stringdumper.StringPacketDumper
 import kotlinx.coroutines.CoroutineScope
@@ -29,7 +32,7 @@ import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 
-class PacketDumperVpnService: VpnService(), VpnProtector {
+class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, ConnectedUsersChangedCallback {
     private val logger = LoggerFactory.getLogger(javaClass)
     private var vpnFileDescriptor: ParcelFileDescriptor? = null
     private val readJob = SupervisorJob() // https://stackoverflow.com/a/63407811
@@ -38,10 +41,9 @@ class PacketDumperVpnService: VpnService(), VpnProtector {
     private val writeScope = CoroutineScope(Dispatchers.IO + writeJob)
     private val running = AtomicBoolean(false)
     private val readBuffer = ByteArray(MAX_RECEIVE_BUFFER_SIZE)
-    private val packetQueue = LinkedBlockingDeque<Packet>()
     private val kAnonProxy = KAnonProxy(ICMPAndroid, this)
     private lateinit var sessionViewModel: SessionViewModel
-    private val packetDumper = PcapNgTcpServerPacketDumper()
+    private val packetDumper = PcapNgTcpServerPacketDumper(callback = this)
     private val binder = LocalBinder()
 
     /**
@@ -60,15 +62,14 @@ class PacketDumperVpnService: VpnService(), VpnProtector {
 
     override fun onCreate() {
         logger.debug("ON CREATE CALLED")
+        sessionViewModel = SessionViewModel.getInstance(PreferenceManager.getDefaultSharedPreferences(applicationContext))
     }
 
-    fun startVPN() {
+    override fun startVPN() {
         if (running.get()) {
             logger.error("VPN already running")
             return
         }
-        sessionViewModel = SessionViewModel.getInstance(PreferenceManager.getDefaultSharedPreferences(applicationContext))
-        packetDumper.start()
 
         val builder = Builder()
             .addAddress(VPN_ADDRESS, VPN_SUBNET_MASK)
@@ -95,13 +96,28 @@ class PacketDumperVpnService: VpnService(), VpnProtector {
         }
     }
 
-    fun stopVPN() {
+    override fun stopVPN() {
         running.set(false)
         packetDumper.stop()
         vpnFileDescriptor?.close()
         readJob.cancel()
         writeJob.cancel()
         sessionViewModel.serviceStopped()
+    }
+
+    override fun startPcapServer() {
+        packetDumper.start()
+        sessionViewModel.pcapServerStarted()
+    }
+
+    override fun onConnectedUsersChanged(connectedUsers: List<String>) {
+        logger.debug("Connected users changed: {}", connectedUsers)
+        sessionViewModel.pcapUsersChanged(connectedUsers)
+    }
+
+    override fun stopPcapServer() {
+        packetDumper.stop()
+        sessionViewModel.pcapServerStopped()
     }
 
     private suspend fun readFromOSWriteToInternet(inputStream: AutoCloseInputStream) {
@@ -164,6 +180,41 @@ class PacketDumperVpnService: VpnService(), VpnProtector {
                 val packet = Packet.fromStream(stream)
                 //logger.debug("Parsed packet: {}", packet)
                 //logger.debug("Stream position after parsing: {} limit: {}", stream.position(), stream.limit())
+                val ipHeader = packet.ipHeader
+                val nextHeader = packet.nextHeaders
+                val payload = packet.payload
+
+                val sourcePort = if (nextHeader is TransportHeader) {
+                    nextHeader.sourcePort
+                } else {
+                    0u
+                }
+                val destinationPort = if (nextHeader is TransportHeader) {
+                    nextHeader.destinationPort
+                } else {
+                    0u
+                }
+
+                val protocol = IpType.fromValue(ipHeader.protocol)
+                val key = Session.getKey(
+                    ipHeader.sourceAddress.toString(),
+                    sourcePort.toInt(),
+                    ipHeader.destinationAddress.toString(),
+                    destinationPort.toInt(),
+                    protocol.toString()
+                )
+                val session = sessionViewModel.sessionMap.getOrPut(key) {
+                    Session(
+                        ipHeader.sourceAddress.toString(),
+                        sourcePort.toInt(),
+                        ipHeader.destinationAddress.toString(),
+                        destinationPort.toInt(),
+                        protocol.toString(),
+                        System.currentTimeMillis()
+                    )
+                }
+                session.outgoingPackets.intValue++
+                session.outgoingBytes.intValue += ipHeader.getTotalLength().toInt()
                 packets.add(packet)
             } catch (e: IllegalArgumentException) {
                 // don't bother to rewind the stream, just log and continue at position + 1
@@ -219,11 +270,8 @@ class PacketDumperVpnService: VpnService(), VpnProtector {
 
     override fun onDestroy() {
         logger.debug("ON DESTROY CALLED")
-        packetDumper.stop()
-        vpnFileDescriptor?.close()
-        readJob.cancel()
-        writeJob.cancel()
-        sessionViewModel.serviceStopped()
+        stopVPN()
+        stopPcapServer()
         logger.debug("ON DESTROY COMPLETED")
         super.onDestroy()
     }

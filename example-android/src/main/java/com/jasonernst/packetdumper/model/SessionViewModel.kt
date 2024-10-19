@@ -1,13 +1,17 @@
 package com.jasonernst.packetdumper.model
 import android.content.SharedPreferences
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.jasonernst.kanonproxy.Session
+import com.jasonernst.packetdumper.Session
 
 class SessionViewModel private constructor(private val sharedPreferences: SharedPreferences): ViewModel() {
-    val sessionMap = mutableMapOf<String, Session>()
+    val sessionMap = mutableStateMapOf<String, Session>()
     private val _hidePermissionsScreen = mutableStateOf(sharedPreferences.getBoolean(HIDE_PERMISSION_SCREEN_KEY, false))
     private val _serviceStarted = mutableStateOf(false)
+    private val _pcapServerStarted = mutableStateOf(false)
+    private val _pcapUsers = mutableStateListOf<String>()
 
     companion object {
         private var instance: SessionViewModel? = null
@@ -45,5 +49,26 @@ class SessionViewModel private constructor(private val sharedPreferences: Shared
 
     fun isServiceStarted(): Boolean {
         return _serviceStarted.value
+    }
+
+    fun pcapServerStarted() {
+        _pcapServerStarted.value = true
+    }
+
+    fun pcapServerStopped() {
+        _pcapServerStarted.value = false
+    }
+
+    fun isPcapServerStarted(): Boolean {
+        return _pcapServerStarted.value
+    }
+
+    fun pcapUsersChanged(users: List<String>) {
+        _pcapUsers.clear()
+        _pcapUsers.addAll(users)
+    }
+
+    fun getPcapUsers(): List<String> {
+        return _pcapUsers
     }
 }
