@@ -178,6 +178,10 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
             val position = stream.position()
             try {
                 val packet = Packet.fromStream(stream)
+                if (packet.ipHeader == null || packet.nextHeaders == null || packet.payload == null) {
+                    logger.warn("Packet is missing headers or payload, skipping")
+                    continue
+                }
                 //logger.debug("Parsed packet: {}", packet)
                 //logger.debug("Stream position after parsing: {} limit: {}", stream.position(), stream.limit())
                 val ipHeader = packet.ipHeader
@@ -194,7 +198,7 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
                     0u
                 }
 
-                val protocol = IpType.fromValue(ipHeader.protocol)
+                val protocol = IpType.fromValue(ipHeader!!.protocol)
                 val key = Session.getKey(
                     ipHeader.sourceAddress.toString(),
                     sourcePort.toInt(),
@@ -238,6 +242,10 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
             while (running.get()) {
                 val packet = kAnonProxy.takeResponse()
                 logger.debug("Got packet from proxy: {}", packet)
+                if (packet.ipHeader == null || packet.nextHeaders == null || packet.payload == null) {
+                    logger.warn("Packet is missing headers or payload, skipping")
+                    continue
+                }
                 packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
                 val bytesToWrite = packet.toByteArray()
 
@@ -256,7 +264,7 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
                     0u
                 }
 
-                val protocol = IpType.fromValue(ipHeader.protocol)
+                val protocol = IpType.fromValue(ipHeader!!.protocol)
                 val key = Session.getKey(
                     ipHeader.destinationAddress.toString(),
                     sourcePort.toInt(),
