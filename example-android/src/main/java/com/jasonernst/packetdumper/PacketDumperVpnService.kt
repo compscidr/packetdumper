@@ -136,7 +136,7 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
                         break
                     }
                     if (bytesRead > 0) {
-                        logger.debug("About to write {} bytes to buffer at position: {}", bytesRead, stream.position())
+                        //logger.debug("About to write {} bytes to buffer at position: {}", bytesRead, stream.position())
                         stream.put(readBuffer, 0, bytesRead)
                         totalBytesRead += bytesRead
                     }
@@ -172,7 +172,7 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
      * may be unreachable, time exceeded, etc, or just a successful ping response.
      */
     private fun parseStream(stream: ByteBuffer): List<Packet> {
-        logger.debug("GOT STREAM: \n{}", StringPacketDumper().dumpBufferToString(buffer = stream, addresses = true, etherType = null))
+        //logger.debug("GOT STREAM: \n{}", StringPacketDumper().dumpBufferToString(buffer = stream, addresses = true, etherType = null))
         val packets = mutableListOf<Packet>()
         while (stream.hasRemaining()) {
             val position = stream.position()
