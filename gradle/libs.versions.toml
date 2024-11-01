@@ -1,16 +1,15 @@
 [versions]
 accompanistPermissions = "0.36.0"
-agp = "8.7.1"
+agp = "8.6.1"
 androidx_preference = "1.2.1"
 compose-bom = "2024.10.00"
 compose-activity = "1.9.3"
 compose_ui_tooling = "1.7.4"
 espresso-core = "3.0.2"
-icmp = "0.0.20"
+icmp = "1.0.0"
 junit = "4.13.2"
 jupiter = "5.11.3"
-kanonproxy = "0.0.7"
-knet = "0.0.14"
+kanonproxy = "0.0.18"
 kotlin = "2.0.21"
 kotlinter = "4.4.1"
 logback-android = "3.0.0"
@@ -43,7 +42,6 @@ slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 runner = { group = "com.android.support.test", name = "runner", version.ref = "runner" }
 espresso-core = { group = "com.android.support.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
-knet = { group = "com.jasonernst.knet", name = "knet", version.ref = "knet" }
 
 [bundles]
 test = ["junit-jupiter-api", "mockk"]

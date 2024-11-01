@@ -58,9 +58,6 @@ dependencies {
     implementation(libs.kanonproxy) {
         exclude(group = "com.jasonernst.packetdumper", module = "packetdumper")
     }
-    implementation(libs.knet) {
-        exclude(group = "com.jasonernst.packetdumper", module = "packetdumper")
-    }
     implementation(libs.logback.android)
     implementation(libs.material) // required for the themes.xml
     implementation(libs.slf4j.api)
