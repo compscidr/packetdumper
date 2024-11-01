@@ -9,7 +9,7 @@ import android.os.ParcelFileDescriptor.AutoCloseInputStream
 import android.os.ParcelFileDescriptor.AutoCloseOutputStream
 import androidx.preference.PreferenceManager
 import com.jasonernst.packetdumper.model.SessionViewModel
-import com.jasonernst.icmp_android.ICMPAndroid
+import com.jasonernst.icmp.android.IcmpAndroid
 import com.jasonernst.kanonproxy.KAnonProxy
 import com.jasonernst.kanonproxy.VpnProtector
 import com.jasonernst.knet.Packet
@@ -41,9 +41,9 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
     private val writeScope = CoroutineScope(Dispatchers.IO + writeJob)
     private val running = AtomicBoolean(false)
     private val readBuffer = ByteArray(MAX_RECEIVE_BUFFER_SIZE)
-    private val kAnonProxy = KAnonProxy(ICMPAndroid, this)
+    private val kAnonProxy = KAnonProxy(IcmpAndroid, this)
     private lateinit var sessionViewModel: SessionViewModel
-    private val packetDumper = PcapNgTcpServerPacketDumper(callback = this)
+    private val packetDumper = PcapNgTcpServerPacketDumper(callback = this, isSimple = false)
     private val binder = LocalBinder()
 
     /**
@@ -71,6 +71,8 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
             return
         }
 
+        kAnonProxy.start()
+
         val builder = Builder()
             .addAddress(VPN_ADDRESS, VPN_SUBNET_MASK)
             //.addAddress(VPN6_ADDRESS, VPN_SUBNET6_MASK)
@@ -88,10 +90,12 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
         sessionViewModel.serviceStarted()
 
         readScope.launch {
+            Thread.currentThread().name = "OS Reader"
             readFromOSWriteToInternet(inputStream)
         }
 
         writeScope.launch {
+            Thread.currentThread().name = "OS Writer"
             readFromInternetWriteToOS(outputStream)
         }
     }
@@ -102,6 +106,7 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
         vpnFileDescriptor?.close()
         readJob.cancel()
         writeJob.cancel()
+        kAnonProxy.stop()
         sessionViewModel.serviceStopped()
     }
 
@@ -120,38 +125,37 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
         sessionViewModel.pcapServerStopped()
     }
 
-    private suspend fun readFromOSWriteToInternet(inputStream: AutoCloseInputStream) {
-        withContext(Dispatchers.IO) {
-            val stream = ByteBuffer.allocate(MAX_STREAM_BUFFER_SIZE)
-            while (running.get()) {
-                // fill up the buffer with data from the OS over multiple reads, or until
-                // there is no more data to read
-                var totalBytesRead = 0
-                do {
-                    // make sure we don't overlfow the buffer
-                    var bytesToRead = min(MAX_RECEIVE_BUFFER_SIZE, stream.remaining())
-                    val bytesRead: Int = inputStream.read(readBuffer, 0, bytesToRead)
-                    if (bytesRead == -1) {
-                        logger.warn("End of OS stream")
-                        break
-                    }
-                    if (bytesRead > 0) {
-                        //logger.debug("About to write {} bytes to buffer at position: {}", bytesRead, stream.position())
-                        stream.put(readBuffer, 0, bytesRead)
-                        totalBytesRead += bytesRead
-                    }
-                } while (bytesRead > 0 && stream.hasRemaining())
-                if (totalBytesRead > 0) {
-                    //logger.debug("Read {} bytes from OS", totalBytesRead)
-                    stream.flip()
-                    val packets = parseStream(stream)
-                    for (packet in packets) {
-                        packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
-                    }
-                    kAnonProxy.handlePackets(packets)
-                } else {
-                    Thread.sleep(100) // wait for data to arrive
+    private fun readFromOSWriteToInternet(inputStream: AutoCloseInputStream) {
+        val stream = ByteBuffer.allocate(MAX_STREAM_BUFFER_SIZE)
+        while (running.get()) {
+            // fill up the buffer with data from the OS over multiple reads, or until
+            // there is no more data to read
+            var totalBytesRead = 0
+            do {
+                // make sure we don't overlfow the buffer
+                var bytesToRead = min(MAX_RECEIVE_BUFFER_SIZE, stream.remaining())
+                val bytesRead: Int = inputStream.read(readBuffer, 0, bytesToRead)
+                if (bytesRead == -1) {
+                    logger.warn("End of OS stream")
+                    break
                 }
+                if (bytesRead > 0) {
+                    //logger.debug("About to write {} bytes to buffer at position: {}", bytesRead, stream.position())
+                    stream.put(readBuffer, 0, bytesRead)
+                    totalBytesRead += bytesRead
+                }
+            } while (bytesRead > 0 && stream.hasRemaining())
+            if (totalBytesRead > 0) {
+                // logger.debug("Read {} bytes from OS", totalBytesRead)
+                stream.flip()
+                val packets = parseStream(stream)
+                for (packet in packets) {
+                    packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
+                }
+                logger.debug("Parsed {} packets from OS, sending to proxy", packets.size)
+                kAnonProxy.handlePackets(packets)
+            } else {
+                Thread.sleep(100) // wait for data to arrive
             }
         }
     }
@@ -237,63 +241,62 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
         return packets
     }
 
-    private suspend fun readFromInternetWriteToOS(outputStream: AutoCloseOutputStream) {
-        withContext(Dispatchers.IO) {
-            while (running.get()) {
-                val packet = kAnonProxy.takeResponse()
-                logger.debug("Got packet from proxy: {}", packet)
-                if (packet.ipHeader == null || packet.nextHeaders == null || packet.payload == null) {
-                    logger.warn("Packet is missing headers or payload, skipping")
-                    continue
-                }
-                packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
-                val bytesToWrite = packet.toByteArray()
+    private fun readFromInternetWriteToOS(outputStream: AutoCloseOutputStream) {
+        while (running.get()) {
+            val packet = kAnonProxy.takeResponse()
+            logger.debug("Got packet from proxy: {}", packet)
+            if (packet.ipHeader == null || packet.nextHeaders == null || packet.payload == null) {
+                logger.warn("Packet is missing headers or payload, skipping")
+                continue
+            }
+            packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
+            val bytesToWrite = packet.toByteArray()
 
-                val ipHeader = packet.ipHeader
-                val nextHeader = packet.nextHeaders
+            val ipHeader = packet.ipHeader
+            val nextHeader = packet.nextHeaders
 
-                // source / dest are swapped for the return traffic so we get the same "session"
-                val sourcePort = if (nextHeader is TransportHeader) {
-                    nextHeader.destinationPort
-                } else {
-                    0u
-                }
-                val destinationPort = if (nextHeader is TransportHeader) {
-                    nextHeader.sourcePort
-                } else {
-                    0u
-                }
+            // source / dest are swapped for the return traffic so we get the same "session"
+            val sourcePort = if (nextHeader is TransportHeader) {
+                nextHeader.destinationPort
+            } else {
+                0u
+            }
+            val destinationPort = if (nextHeader is TransportHeader) {
+                nextHeader.sourcePort
+            } else {
+                0u
+            }
 
-                val protocol = IpType.fromValue(ipHeader!!.protocol)
-                val key = Session.getKey(
-                    ipHeader.destinationAddress.toString(),
-                    sourcePort.toInt(),
+            val protocol = IpType.fromValue(ipHeader!!.protocol)
+            val key = Session.getKey(
+                ipHeader.destinationAddress.toString(),
+                sourcePort.toInt(),
+                ipHeader.sourceAddress.toString(),
+                destinationPort.toInt(),
+                protocol.toString()
+            )
+            val session = sessionViewModel.sessionMap.getOrPut(key) {
+                Session(
                     ipHeader.sourceAddress.toString(),
+                    sourcePort.toInt(),
+                    ipHeader.destinationAddress.toString(),
                     destinationPort.toInt(),
-                    protocol.toString()
+                    protocol.toString(),
+                    System.currentTimeMillis()
                 )
-                val session = sessionViewModel.sessionMap.getOrPut(key) {
-                    Session(
-                        ipHeader.sourceAddress.toString(),
-                        sourcePort.toInt(),
-                        ipHeader.destinationAddress.toString(),
-                        destinationPort.toInt(),
-                        protocol.toString(),
-                        System.currentTimeMillis()
-                    )
-                }
-                session.incomingPackets.intValue++
-                session.incomingBytes.intValue += ipHeader.getTotalLength().toInt()
+            }
+            session.incomingPackets.intValue++
+            session.incomingBytes.intValue += ipHeader.getTotalLength().toInt()
 
-                try {
-                    outputStream.write(bytesToWrite)
-                    outputStream.flush()
-                    //logger.debug("Wrote {} bytes to OS", bytesToWrite.size)
-                } catch (e: Exception) {
-                    logger.error("Error writing to OS, probably shutting down ", e)
-                }
+            try {
+                outputStream.write(bytesToWrite)
+                outputStream.flush()
+                //logger.debug("Wrote {} bytes to OS", bytesToWrite.size)
+            } catch (e: Exception) {
+                logger.error("Error writing to OS, probably shutting down ", e)
             }
         }
+        logger.warn("OS Writer thread exiting")
     }
 
     override fun onBind(intent: Intent): IBinder? {
