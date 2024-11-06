@@ -15,6 +15,7 @@ import com.jasonernst.kanonproxy.VpnProtector
 import com.jasonernst.knet.Packet
 import com.jasonernst.knet.network.ip.IpType
 import com.jasonernst.knet.transport.TransportHeader
+import com.jasonernst.knet.transport.tcp.TcpHeader
 import com.jasonernst.packetdumper.ethernet.EtherType
 import com.jasonernst.packetdumper.serverdumper.ConnectedUsersChangedCallback
 import com.jasonernst.packetdumper.serverdumper.PcapNgTcpServerPacketDumper
@@ -26,6 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import java.net.DatagramSocket
+import java.net.Inet4Address
 import java.net.Socket
 import java.nio.ByteBuffer
 import java.util.concurrent.LinkedBlockingDeque
@@ -149,13 +151,24 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
                 // logger.debug("Read {} bytes from OS", totalBytesRead)
                 stream.flip()
                 val packets = parseStream(stream)
-                for (packet in packets) {
-                    packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
-                }
-                logger.debug("Parsed {} packets from OS, sending to proxy", packets.size)
+
+//                val packetsToHandle = mutableListOf<Packet>()
+//                for (packet in packets) {
+//                    if (packet.nextHeaders is TcpHeader) {
+//                        if (packet.ipHeader!!.destinationAddress == Inet4Address.getByName("138.68.242.6")) {
+//                            packetsToHandle.add(packet)
+//                            packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
+//                        }
+//                    } else {
+//                        packetsToHandle.add(packet)
+//                        packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
+//                    }
+//                }
+//                logger.debug("Parsed {} packets from OS, sending to proxy", packetsToHandle.size)
+//                kAnonProxy.handlePackets(packetsToHandle)'
                 kAnonProxy.handlePackets(packets)
             } else {
-                Thread.sleep(100) // wait for data to arrive
+                // Thread.sleep(100) // wait for data to arrive
             }
         }
     }
@@ -244,7 +257,7 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
     private fun readFromInternetWriteToOS(outputStream: AutoCloseOutputStream) {
         while (running.get()) {
             val packet = kAnonProxy.takeResponse()
-            logger.debug("Got packet from proxy: {}", packet)
+            logger.debug("Got packet from proxy: {}", packet.nextHeaders)
             if (packet.ipHeader == null || packet.nextHeaders == null || packet.payload == null) {
                 logger.warn("Packet is missing headers or payload, skipping")
                 continue
@@ -291,7 +304,7 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
             try {
                 outputStream.write(bytesToWrite)
                 outputStream.flush()
-                //logger.debug("Wrote {} bytes to OS", bytesToWrite.size)
+                logger.debug("Wrote {} bytes to OS", bytesToWrite.size)
             } catch (e: Exception) {
                 logger.error("Error writing to OS, probably shutting down ", e)
             }
