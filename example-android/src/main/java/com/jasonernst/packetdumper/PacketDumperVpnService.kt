@@ -13,6 +13,7 @@ import com.jasonernst.icmp.android.IcmpAndroid
 import com.jasonernst.kanonproxy.KAnonProxy
 import com.jasonernst.kanonproxy.VpnProtector
 import com.jasonernst.knet.Packet
+import com.jasonernst.knet.Packet.Companion.parseStream
 import com.jasonernst.knet.network.ip.IpType
 import com.jasonernst.knet.transport.TransportHeader
 import com.jasonernst.knet.transport.tcp.TcpHeader
@@ -28,11 +29,13 @@ import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import java.net.DatagramSocket
 import java.net.Inet4Address
+import java.net.InetSocketAddress
 import java.net.Socket
 import java.nio.ByteBuffer
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
+import kotlin.random.Random
 
 class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, ConnectedUsersChangedCallback {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -47,6 +50,10 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
     private lateinit var sessionViewModel: SessionViewModel
     private val packetDumper = PcapNgTcpServerPacketDumper(callback = this, isSimple = false)
     private val binder = LocalBinder()
+    // just use a fake client since we don't care about the source address since we aren't
+    // supporting multiple clients for this application
+    val randomPort = Random.nextInt(1024, 65535)
+    val clientAddress = InetSocketAddress(Inet4Address.getByName("127.0.0.1"), randomPort)
 
     /**
      * Class used for the client Binder. Because we know this service always
@@ -130,133 +137,30 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
     private fun readFromOSWriteToInternet(inputStream: AutoCloseInputStream) {
         val stream = ByteBuffer.allocate(MAX_STREAM_BUFFER_SIZE)
         while (running.get()) {
-            // fill up the buffer with data from the OS over multiple reads, or until
-            // there is no more data to read
-            var totalBytesRead = 0
-            do {
-                // make sure we don't overlfow the buffer
-                var bytesToRead = min(MAX_RECEIVE_BUFFER_SIZE, stream.remaining())
-                val bytesRead: Int = inputStream.read(readBuffer, 0, bytesToRead)
-                if (bytesRead == -1) {
-                    logger.warn("End of OS stream")
-                    break
-                }
-                if (bytesRead > 0) {
-                    //logger.debug("About to write {} bytes to buffer at position: {}", bytesRead, stream.position())
-                    stream.put(readBuffer, 0, bytesRead)
-                    totalBytesRead += bytesRead
-                }
-            } while (bytesRead > 0 && stream.hasRemaining())
-            if (totalBytesRead > 0) {
-                // logger.debug("Read {} bytes from OS", totalBytesRead)
-                stream.flip()
-                val packets = parseStream(stream)
-
-//                val packetsToHandle = mutableListOf<Packet>()
-//                for (packet in packets) {
-//                    if (packet.nextHeaders is TcpHeader) {
-//                        if (packet.ipHeader!!.destinationAddress == Inet4Address.getByName("138.68.242.6")) {
-//                            packetsToHandle.add(packet)
-//                            packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
-//                        }
-//                    } else {
-//                        packetsToHandle.add(packet)
-//                        packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
-//                    }
-//                }
-//                logger.debug("Parsed {} packets from OS, sending to proxy", packetsToHandle.size)
-//                kAnonProxy.handlePackets(packetsToHandle)'
-                kAnonProxy.handlePackets(packets)
-            } else {
-                // Thread.sleep(100) // wait for data to arrive
-            }
-        }
-    }
-
-    /**
-     * The packets will be either IPv4 or Ipv6 headers, followed by NextHeader(s) which are typically
-     * TCP, UDP, ICMP, etc. This is followed by the optional payload.
-     *
-     * For TCP packets, we need to make a request on behalf of the client on a protected TCP socket.
-     * We then need to listen to the return traffic and send it back to the client, and ensure that
-     * the sequence numbers are maintained etc.
-     *
-     * For UDP packets, we can just send them to the internet and listen for the return traffic and
-     * then just send it back to the client.
-     *
-     * For ICMP, we need to use an ICMP socket (https://github.com/compscidr/icmp) to send the
-     * request and listen for the return traffic. We then return the ICMP result to the client. This
-     * may be unreachable, time exceeded, etc, or just a successful ping response.
-     */
-    private fun parseStream(stream: ByteBuffer): List<Packet> {
-        //logger.debug("GOT STREAM: \n{}", StringPacketDumper().dumpBufferToString(buffer = stream, addresses = true, etherType = null))
-        val packets = mutableListOf<Packet>()
-        while (stream.hasRemaining()) {
-            val position = stream.position()
-            try {
-                val packet = Packet.fromStream(stream)
-                if (packet.ipHeader == null || packet.nextHeaders == null || packet.payload == null) {
-                    logger.warn("Packet is missing headers or payload, skipping")
-                    continue
-                }
-                //logger.debug("Parsed packet: {}", packet)
-                //logger.debug("Stream position after parsing: {} limit: {}", stream.position(), stream.limit())
-                val ipHeader = packet.ipHeader
-                val nextHeader = packet.nextHeaders
-
-                val sourcePort = if (nextHeader is TransportHeader) {
-                    nextHeader.sourcePort
-                } else {
-                    0u
-                }
-                val destinationPort = if (nextHeader is TransportHeader) {
-                    nextHeader.destinationPort
-                } else {
-                    0u
-                }
-
-                val protocol = IpType.fromValue(ipHeader!!.protocol)
-                val key = Session.getKey(
-                    ipHeader.sourceAddress.toString(),
-                    sourcePort.toInt(),
-                    ipHeader.destinationAddress.toString(),
-                    destinationPort.toInt(),
-                    protocol.toString()
-                )
-                val session = sessionViewModel.sessionMap.getOrPut(key) {
-                    Session(
-                        ipHeader.sourceAddress.toString(),
-                        sourcePort.toInt(),
-                        ipHeader.destinationAddress.toString(),
-                        destinationPort.toInt(),
-                        protocol.toString(),
-                        System.currentTimeMillis()
-                    )
-                }
-                session.outgoingPackets.intValue++
-                session.outgoingBytes.intValue += ipHeader.getTotalLength().toInt()
-                packets.add(packet)
-            } catch (e: IllegalArgumentException) {
-                // don't bother to rewind the stream, just log and continue at position + 1
-                logger.error("Error parsing stream: ", e)
-                stream.position(position + 1)
-            } catch (e: com.jasonernst.knet.PacketTooShortException) {
-                logger.warn("Packet too short to parse, trying again when more data arrives: {}", e.message)
-                //logger.debug("POSITION: {} LIMIT: {}, RESETTING TO START: {}", stream.position(), stream.limit(), position)
-                // rewind the stream to before we tried parsing so we can try again later
-                stream.position(position)
+            val bytesToRead = min(MAX_RECEIVE_BUFFER_SIZE, stream.remaining())
+            val bytesRead = inputStream.read(readBuffer, 0, bytesToRead)
+            if (bytesRead == -1) {
+                logger.warn("End of OS stream")
                 break
             }
+            if (bytesRead > 0) {
+                stream.put(readBuffer, 0, bytesRead)
+                //logger.debug("Read {} bytes from OS. position: {} remaining {}", bytesRead, stream.position(), stream.remaining())
+                stream.flip()
+                //logger.debug("After flip: position: {} remaining {}", stream.position(), stream.remaining())
+                val packets = parseStream(stream)
+                for (packet in packets) {
+                    packetDumper.dumpBuffer(ByteBuffer.wrap(packet.toByteArray()), etherType = EtherType.DETECT)
+                }
+                // logger.debug("After parse: position: {} remaining {}", stream.position(), stream.remaining())
+                kAnonProxy.handlePackets(packets, clientAddress)
+            }
         }
-        //logger.debug("Stream position before compact: {} limit: {}", stream.position(), stream.limit())
-        stream.compact()
-        //logger.debug("Stream position after compact: {} limit: {}", stream.position(), stream.limit())
-        return packets
     }
 
     private fun readFromInternetWriteToOS(outputStream: AutoCloseOutputStream) {
         while (running.get()) {
-            val packet = kAnonProxy.takeResponse()
+            val packet = kAnonProxy.takeResponse(clientAddress)
             logger.debug("Got packet from proxy: {}", packet.nextHeaders)
             if (packet.ipHeader == null || packet.nextHeaders == null || packet.payload == null) {
                 logger.warn("Packet is missing headers or payload, skipping")
@@ -280,26 +184,26 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
                 0u
             }
 
-            val protocol = IpType.fromValue(ipHeader!!.protocol)
-            val key = Session.getKey(
-                ipHeader.destinationAddress.toString(),
-                sourcePort.toInt(),
-                ipHeader.sourceAddress.toString(),
-                destinationPort.toInt(),
-                protocol.toString()
-            )
-            val session = sessionViewModel.sessionMap.getOrPut(key) {
-                Session(
-                    ipHeader.sourceAddress.toString(),
-                    sourcePort.toInt(),
-                    ipHeader.destinationAddress.toString(),
-                    destinationPort.toInt(),
-                    protocol.toString(),
-                    System.currentTimeMillis()
-                )
-            }
-            session.incomingPackets.intValue++
-            session.incomingBytes.intValue += ipHeader.getTotalLength().toInt()
+//            val protocol = IpType.fromValue(ipHeader!!.protocol)
+//            val key = Session.getKey(
+//                ipHeader.destinationAddress.toString(),
+//                sourcePort.toInt(),
+//                ipHeader.sourceAddress.toString(),
+//                destinationPort.toInt(),
+//                protocol.toString()
+//            )
+//            val session = sessionViewModel.sessionMap.getOrPut(key) {
+//                Session(
+//                    ipHeader.sourceAddress.toString(),
+//                    sourcePort.toInt(),
+//                    ipHeader.destinationAddress.toString(),
+//                    destinationPort.toInt(),
+//                    protocol.toString(),
+//                    System.currentTimeMillis()
+//                )
+//            }
+//            session.incomingPackets.intValue++
+//            session.incomingBytes.intValue += ipHeader.getTotalLength().toInt()
 
             try {
                 outputStream.write(bytesToWrite)

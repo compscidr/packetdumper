@@ -54,10 +54,15 @@ dependencies {
     }
     implementation(libs.icmp.android) {
         exclude(group = "com.jasonernst.packetdumper", module = "packetdumper")
+        // turn off logback-android to make things go faster
+        // exclude(group = "com.github.tony19", module = "logback-android")
     }
     implementation(libs.kanonproxy) {
         exclude(group = "com.jasonernst.packetdumper", module = "packetdumper")
+        // turn off logback-android to make things go faster
+        // exclude(group = "com.github.tony19", module = "logback-android")
     }
+    // turn off logback-android to make things go faster
     implementation(libs.logback.android)
     implementation(libs.material) // required for the themes.xml
     implementation(libs.slf4j.api)
