@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory
 import java.io.BufferedOutputStream
 import java.net.ServerSocket
 import java.net.Socket
-import java.net.SocketException
 import java.nio.ByteBuffer
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
