@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class PcapNgTcpServerPacketDumper(
     private val listenPort: Int = DEFAULT_PORT,
-    private val isSimple: Boolean = true,
+    private val isSimple: Boolean = false,
     private val callback: ConnectedUsersChangedCallback? = null,
 ) : AbstractServerPacketDumper() {
     private val logger = LoggerFactory.getLogger(javaClass)
