@@ -38,6 +38,7 @@ dependencies {
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testImplementation(libs.logback.classic)
+    implementation(libs.logips)
 }
 
 version = "0.0.0-SNAPSHOT"
