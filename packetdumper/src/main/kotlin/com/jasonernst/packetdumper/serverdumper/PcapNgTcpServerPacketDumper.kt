@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory
 import java.io.BufferedOutputStream
 import java.net.ServerSocket
 import java.net.Socket
-import java.net.SocketException
 import java.nio.ByteBuffer
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
@@ -28,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class PcapNgTcpServerPacketDumper(
     private val listenPort: Int = DEFAULT_PORT,
-    private val isSimple: Boolean = true,
+    private val isSimple: Boolean = false,
     private val callback: ConnectedUsersChangedCallback? = null,
 ) : AbstractServerPacketDumper() {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -58,7 +57,7 @@ class PcapNgTcpServerPacketDumper(
                     return@Thread
                 }
                 logger.trace("WiresharkTcpDump listening on {}", socket!!.localSocketAddress)
-                logAllIPAddresses()
+                LogIp.logAllIPAddresses()
                 isRunning.set(true)
 
                 while (isRunning.get()) {
@@ -177,42 +176,5 @@ class PcapNgTcpServerPacketDumper(
 
     private fun issueCallback() {
         callback?.onConnectedUsersChanged(connectionQueue.map { it.remoteSocketAddress.toString() })
-    }
-
-    private fun logAllIPAddresses(
-        excludeInterfaces: List<String> = listOf("bump", "docker", "virbr", "veth", "tailscale", "dummy", "tun"),
-    ) {
-        try {
-            val interfaces = java.net.NetworkInterface.getNetworkInterfaces()
-            if (interfaces == null) {
-                logger.error("No network interfaces found")
-                return
-            }
-            for (networkInterface in interfaces) {
-                var excluded = false
-                for (excludeInterface in excludeInterfaces) {
-                    if (networkInterface.displayName.contains(excludeInterface)) {
-                        excluded = true
-                        break
-                    }
-                }
-                if (excluded) {
-                    continue
-                }
-                if (networkInterface.isUp.not()) {
-                    continue
-                }
-                val addresses = networkInterface.inetAddresses.toList()
-                if (addresses.isEmpty()) {
-                    continue
-                }
-                logger.trace("Network Interface: ${networkInterface.name}")
-                for (inetAddress in addresses) {
-                    logger.trace("  IP Address: ${inetAddress.hostAddress}")
-                }
-            }
-        } catch (e: SocketException) {
-            logger.error("Error getting network interfaces", e)
-        }
     }
 }
