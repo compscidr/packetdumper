@@ -30,7 +30,7 @@ jobs:
         run: ./gradlew check
       - name: Upload Lib Unit Tests Report to CodeCov
         # https://github.com/codecov/codecov-action
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: libunittests
