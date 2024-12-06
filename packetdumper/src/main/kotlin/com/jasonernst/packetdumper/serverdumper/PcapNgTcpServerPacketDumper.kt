@@ -104,6 +104,10 @@ class PcapNgTcpServerPacketDumper(
         }
     }
 
+    override fun isStarted(): Boolean {
+        return isRunning.get()
+    }
+
     override fun stop() {
         if (!isRunning.get()) {
             logger.error("Trying to stop a server that is already stopped")
