@@ -104,9 +104,7 @@ class PcapNgTcpServerPacketDumper(
         }
     }
 
-    override fun isStarted(): Boolean {
-        return isRunning.get()
-    }
+    override fun isStarted(): Boolean = isRunning.get()
 
     override fun stop() {
         if (!isRunning.get()) {
