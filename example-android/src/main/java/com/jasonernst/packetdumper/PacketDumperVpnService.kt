@@ -14,6 +14,7 @@ import com.jasonernst.kanonproxy.KAnonProxy
 import com.jasonernst.kanonproxy.VpnProtector
 import com.jasonernst.knet.Packet
 import com.jasonernst.knet.Packet.Companion.parseStream
+import com.jasonernst.knet.SentinelPacket
 import com.jasonernst.knet.network.ip.IpType
 import com.jasonernst.knet.transport.TransportHeader
 import com.jasonernst.knet.transport.tcp.TcpHeader
@@ -161,6 +162,12 @@ class PacketDumperVpnService: VpnService(), VpnProtector, VpnUiService, Connecte
     private fun readFromInternetWriteToOS(outputStream: AutoCloseOutputStream) {
         while (running.get()) {
             val packet = kAnonProxy.takeResponse(clientAddress)
+
+            if (packet is SentinelPacket) {
+                logger.warn("GOT SENTINAL")
+                continue
+            }
+
             logger.debug("Got packet from proxy: {}", packet.nextHeaders)
             if (packet.ipHeader == null || packet.nextHeaders == null || packet.payload == null) {
                 logger.warn("Packet is missing headers or payload, skipping")
