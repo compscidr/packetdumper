@@ -57,7 +57,7 @@ class PcapNgTcpServerPacketDumper(
                     return@Thread
                 }
                 logger.trace("WiresharkTcpDump listening on {}", socket!!.localSocketAddress)
-                LogIp.logAllIPAddresses()
+                LogIp.logAllIpAddresses()
                 isRunning.set(true)
 
                 while (isRunning.get()) {
