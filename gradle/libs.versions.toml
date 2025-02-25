@@ -8,7 +8,6 @@ compose_ui_tooling = "1.7.8"
 espresso-core = "3.0.2"
 icmp = "1.0.0"
 junit = "4.13.2"
-jupiter = "5.12.0"
 kanonproxy = "0.0.46"
 kotlin = "2.1.10"
 kotlinter = "5.0.1"
@@ -29,8 +28,10 @@ compose-ui = { module = "androidx.compose.ui:ui" }
 compose_ui_tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose_ui_tooling"}
 compose-material3 = { module = "androidx.compose.material3:material3" }
 compose_ui_tooling_preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose_ui_tooling" }
-junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "jupiter" }
-junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "jupiter" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api" }
+junit-bom = { module = "org.junit:junit-bom", version="5.12.0" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine" }
+junit-jupiter-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 kanonproxy = { module = "com.jasonernst.kanonproxy:kanonproxy", version.ref = "kanonproxy" }
 icmp_common = { module = "com.jasonernst.icmp:icmp_common", version.ref = "icmp" }
 icmp_android = { module = "com.jasonernst.icmp:icmp_android", version.ref = "icmp" }
@@ -46,6 +47,7 @@ espresso-core = { group = "com.android.support.test.espresso", name = "espresso-
 
 [bundles]
 test = ["junit-jupiter-api", "mockk"]
+test-runtime = ["junit-jupiter-engine", "junit-jupiter-platform-launcher"]
 compose = ["compose-activity", "compose-ui", "compose-material3", "compose-foundation-layout" ]
 
 [plugins]
