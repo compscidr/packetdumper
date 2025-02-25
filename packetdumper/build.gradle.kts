@@ -35,10 +35,11 @@ jacoco {
 
 dependencies {
     api(libs.slf4j.api)
-    testImplementation(libs.bundles.test)
-    testRuntimeOnly(libs.junit.jupiter.engine)
-    testImplementation(libs.logback.classic)
     implementation(libs.logips)
+    testImplementation(libs.logback.classic)
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.bundles.test.runtime)
 }
 
 version = "0.0.0-SNAPSHOT"
