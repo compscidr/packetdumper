@@ -55,7 +55,7 @@ git-version = { id = "me.qoomon.git-versioning", version = "6.4.4" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
 sonatype-maven-central = { id = "com.vanniktech.maven.publish", version = "0.31.0" }
-gradleup-nmcp = { id = "com.gradleup.nmcp", version = "0.1.2"}
+gradleup-nmcp = { id = "com.gradleup.nmcp", version = "0.1.3"}
 android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
