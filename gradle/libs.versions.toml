@@ -29,7 +29,7 @@ compose_ui_tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = 
 compose-material3 = { module = "androidx.compose.material3:material3" }
 compose_ui_tooling_preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose_ui_tooling" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api" }
-junit-bom = { module = "org.junit:junit-bom", version="5.13.0" }
+junit-bom = { module = "org.junit:junit-bom", version="5.13.1" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine" }
 junit-jupiter-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 kanonproxy = { module = "com.jasonernst.kanonproxy:kanonproxy", version.ref = "kanonproxy" }
