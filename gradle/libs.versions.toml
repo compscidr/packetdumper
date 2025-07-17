@@ -14,7 +14,7 @@ kotlinter = "5.1.1"
 logback-android = "3.0.0"
 logback-classic = "1.5.18"
 material = "1.12.0"
-mockk = "1.14.4"
+mockk = "1.14.5"
 runner = "1.0.2"
 slf4j = "2.0.17"
 
