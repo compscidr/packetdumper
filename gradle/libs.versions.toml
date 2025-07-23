@@ -37,7 +37,7 @@ icmp_common = { module = "com.jasonernst.icmp:icmp_common", version.ref = "icmp"
 icmp_android = { module = "com.jasonernst.icmp:icmp_android", version.ref = "icmp" }
 logback-android = { module = "com.github.tony19:logback-android", version.ref = "logback-android" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback-classic" }
-logips = { module = "com.jasonernst.logips:logips", version="0.1.2" }
+logips = { module = "com.jasonernst.logips:logips", version="0.1.3" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
