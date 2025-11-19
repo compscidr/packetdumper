@@ -2,7 +2,7 @@
 accompanistPermissions = "0.37.3"
 agp = "8.13.1"
 androidx_preference = "1.2.1"
-compose-bom = "2025.11.00"
+compose-bom = "2025.11.01"
 compose-activity = "1.11.0"
 compose_ui_tooling = "1.9.5"
 espresso-core = "3.0.2"
