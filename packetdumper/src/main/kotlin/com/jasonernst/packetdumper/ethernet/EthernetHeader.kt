@@ -70,8 +70,14 @@ class EthernetHeader(
             // the byte, so we need to zero out the bottom half and shift it right 4 bits
             val shiftedVersion = ((ipVersion and 0xF0.toUByte()).toUInt() shr 4).toUByte()
             return when (shiftedVersion) {
-                IP4_VERSION -> EtherType.IPv4
-                IP6_VERSION -> EtherType.IPv6
+                IP4_VERSION -> {
+                    EtherType.IPv4
+                }
+
+                IP6_VERSION -> {
+                    EtherType.IPv6
+                }
+
                 else -> {
                     logger.warn("Couldn't detect etherType, got $shiftedVersion")
                     EtherType.DETECT
