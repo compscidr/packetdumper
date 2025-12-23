@@ -6,7 +6,7 @@ pluginManagement {
         maven(url = "https://oss.sonatype.org/content/repositories/snapshots/")
     }
     plugins {
-        kotlin("jvm") version "2.2.21"
+        kotlin("jvm") version "2.3.0"
     }
 }
 plugins {
