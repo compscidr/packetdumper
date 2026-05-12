@@ -16,7 +16,7 @@ logback-classic = "1.5.32"
 material = "1.13.0"
 mockk = "1.14.9"
 runner = "1.0.2"
-slf4j = "2.0.17"
+slf4j = "2.0.18"
 
 [libraries]
 androidx_preference = { module = "androidx.preference:preference-ktx", version.ref = "androidx_preference" }
